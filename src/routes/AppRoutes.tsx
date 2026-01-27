@@ -37,12 +37,9 @@ const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
 // Pages
 import { Login } from '../pages/auth/Login';
 import { Dashboard } from '../pages/dashboard';
+import { MeetingList, MeetingDetails, MeetingForm } from '../pages/meetings';
 
 // Placeholder pages
-const MeetingListPage = () => <PlaceholderPage title="Meetings" />;
-const MeetingDetailPage = () => <PlaceholderPage title="Meeting Details" />;
-const MeetingCreatePage = () => <PlaceholderPage title="Create Meeting" />;
-const MeetingEditPage = () => <PlaceholderPage title="Edit Meeting" />;
 const DocumentListPage = () => <PlaceholderPage title="Documents" />;
 const DocumentDetailPage = () => <PlaceholderPage title="Document Details" />;
 const DocumentUploadPage = () => <PlaceholderPage title="Upload Document" />;
@@ -116,7 +113,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.MEETINGS_LIST}
           element={
             <ProtectedRoute requirePermission="meetings:view">
-              <MeetingListPage />
+              <MeetingList />
             </ProtectedRoute>
           }
         />
@@ -124,7 +121,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.MEETINGS_DETAIL}
           element={
             <ProtectedRoute requirePermission="meetings:view">
-              <MeetingDetailPage />
+              <MeetingDetails />
             </ProtectedRoute>
           }
         />
@@ -132,7 +129,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.MEETINGS_CREATE}
           element={
             <ProtectedRoute requirePermission="meetings:create">
-              <MeetingCreatePage />
+              <MeetingForm />
             </ProtectedRoute>
           }
         />
@@ -140,7 +137,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.MEETINGS_EDIT}
           element={
             <ProtectedRoute requirePermission="meetings:edit">
-              <MeetingEditPage />
+              <MeetingForm />
             </ProtectedRoute>
           }
         />
