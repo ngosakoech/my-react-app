@@ -1,7 +1,15 @@
 import type { Resolution, Vote, VotingResult } from '../types/voting.types';
 import { ResolutionStatus, VotingRule, VoteDecision } from '../types/voting.types';
+import { mockUsers } from './users.mock';
+import { UserRole } from '../types/auth.types';
 
-const calculateVotingResult = (votes: Vote[], votingRule: VotingRule, totalEligibleVoters: number): VotingResult => {
+const TOTAL_BOARD_MEMBERS = mockUsers.filter(user => 
+  user.role === UserRole.BOARD_MEMBER || 
+  user.role === UserRole.CHAIRPERSON || 
+  user.role === UserRole.ADMIN
+).length;
+
+const calculateVotingResult = (votes: Vote[], votingRule: VotingRule, totalEligibleVoters: number = TOTAL_BOARD_MEMBERS): VotingResult => {
   const totalVotes = votes.length;
   const yesVotes = votes.filter(v => v.decision === VoteDecision.YES).length;
   const noVotes = votes.filter(v => v.decision === VoteDecision.NO).length;
@@ -498,7 +506,7 @@ export const mockResolutions: Resolution[] = [
 // Calculate results for all resolutions
 mockResolutions.forEach(resolution => {
   if (resolution.status === ResolutionStatus.CLOSED || resolution.votes.length > 0) {
-    resolution.result = calculateVotingResult(resolution.votes, resolution.votingRule, 10);
+    resolution.result = calculateVotingResult(resolution.votes, resolution.votingRule);
   }
 });
 
