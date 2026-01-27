@@ -7,12 +7,13 @@ const MOCK_PASSWORD = 'password123';
 
 // Generate a mock JWT token
 const generateMockToken = (user: User): AuthToken => {
+  const now = Math.floor(Date.now() / 1000); // Current time in seconds
   const tokenPayload = {
     userId: user.id,
     email: user.email,
     role: user.role,
-    iat: Date.now(),
-    exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    iat: now,
+    exp: now + 24 * 60 * 60, // 24 hours in seconds (JWT standard)
   };
 
   // In a real app, this would be a proper JWT. For mock, we'll use base64

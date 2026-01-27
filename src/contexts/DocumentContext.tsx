@@ -133,14 +133,11 @@ const initialState: DocumentState = {
 export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(documentReducer, initialState);
 
-  const fetchDocuments = useCallback(async (filters?: DocumentFilters) => {
+  const fetchDocuments = useCallback(async (additionalFilters?: DocumentFilters) => {
     dispatch({ type: 'FETCH_START' });
     try {
-      const mergedFilters = { ...state.filters, ...filters };
-      if (state.searchQuery) {
-        mergedFilters.search = state.searchQuery;
-      }
-      const response = await documentService.getDocuments(mergedFilters);
+      // Merge with provided filters - caller is responsible for including search/filters if needed
+      const response = await documentService.getDocuments(additionalFilters);
       dispatch({ type: 'FETCH_SUCCESS', payload: response });
     } catch (error: any) {
       dispatch({
@@ -149,7 +146,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
       throw error;
     }
-  }, [state.filters, state.searchQuery]);
+  }, []);
 
   const getDocument = useCallback(async (id: string) => {
     dispatch({ type: 'FETCH_START' });
