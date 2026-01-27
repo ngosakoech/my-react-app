@@ -136,7 +136,7 @@ export const AnalyticsDashboard = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {kpiCards.map((kpi, index) => (
-          <Grid xs={12} sm={6} md={3} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -176,7 +176,7 @@ export const AnalyticsDashboard = () => {
       </Grid>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -245,7 +245,7 @@ export const AnalyticsDashboard = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -339,7 +339,7 @@ export const AnalyticsDashboard = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -360,7 +360,7 @@ export const AnalyticsDashboard = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3, bgcolor: '#f5f5f5' }}>
             <Alert severity="info">
               <Typography variant="subtitle2" gutterBottom>

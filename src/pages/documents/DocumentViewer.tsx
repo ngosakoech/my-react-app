@@ -27,7 +27,7 @@ import {
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { mockDocuments } from '../../mocks/documents.mock';
-import { Document } from '../../types';
+import { type Document } from '../../types';
 import { format } from 'date-fns';
 
 export const DocumentViewer = () => {
@@ -111,7 +111,7 @@ export const DocumentViewer = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper
             sx={{
               p: 4,
@@ -140,7 +140,7 @@ export const DocumentViewer = () => {
           </Paper>
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>

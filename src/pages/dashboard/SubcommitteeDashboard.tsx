@@ -95,7 +95,7 @@ export const SubcommitteeDashboard = () => {
 
       <Grid container spacing={3}>
         {stats.map((stat, index) => (
-          <Grid xs={12} sm={6} md={3} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -116,7 +116,7 @@ export const SubcommitteeDashboard = () => {
           </Grid>
         ))}
 
-        <Grid xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -177,7 +177,7 @@ export const SubcommitteeDashboard = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -234,7 +234,7 @@ export const SubcommitteeDashboard = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
