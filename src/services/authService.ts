@@ -117,9 +117,9 @@ class AuthService {
         return null;
       }
 
-      // Verify token is valid
-      const decodedToken = decodeMockToken(token);
-      if (!decodedToken || decodedToken.exp < Date.now()) {
+      // Verify token is valid (JWT exp is in seconds, Date.now() is in milliseconds)
+      const decodedToken = decodeMockToken(token) as any;
+      if (!decodedToken || decodedToken.exp * 1000 < Date.now()) {
         // Token expired
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');
@@ -190,8 +190,9 @@ class AuthService {
     const token = localStorage.getItem('authToken');
     if (!token) return false;
 
-    const decodedToken = decodeMockToken(token);
-    return decodedToken && decodedToken.exp > Date.now();
+    const decodedToken = decodeMockToken(token) as any;
+    // JWT exp is in seconds, Date.now() is in milliseconds
+    return !!(decodedToken && decodedToken.exp * 1000 > Date.now());
   }
 
   /**

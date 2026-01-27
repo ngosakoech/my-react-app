@@ -92,9 +92,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isTokenExpired = useCallback((token: string): boolean => {
     try {
       const decodedToken = JSON.parse(atob(token));
-      return decodedToken.exp < Date.now();
+      // JWT exp is in seconds, Date.now() is in milliseconds
+      return decodedToken.exp * 1000 < Date.now();
     } catch {
       return true;
+    }
+  }, []);
+
+  // Logout
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      dispatch({ type: 'LOGOUT' });
     }
   }, []);
 
@@ -103,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (state.token && isTokenExpired(state.token)) {
       logout();
     }
-  }, [state.token]);
+  }, [state.token, isTokenExpired, logout]);
 
   // Check authentication status on mount
   const checkAuth = useCallback(async () => {
@@ -166,17 +178,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         payload: error.message || 'Login failed',
       });
       throw error;
-    }
-  }, []);
-
-  // Logout
-  const logout = useCallback(async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      dispatch({ type: 'LOGOUT' });
     }
   }, []);
 
