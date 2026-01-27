@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
-  (error: AxiosError<unknown>) => {
+  (error: AxiosError<any>) => {
     const apiError: ApiError = {
       message: 'An unexpected error occurred',
       status: error.response?.status,
