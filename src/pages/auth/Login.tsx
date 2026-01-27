@@ -210,10 +210,10 @@ export const Login = () => {
               Demo Credentials:
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block">
-              Admin: admin@uwdt.com / password
+              Admin: admin@uwdt.com / password123
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block">
-              Board Member: board@uwdt.com / password
+              Board Member: board@uwdt.com / password123
             </Typography>
           </Box>
         </Paper>
