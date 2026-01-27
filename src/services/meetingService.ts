@@ -400,7 +400,7 @@ class MeetingService {
   /**
    * Cancel a meeting
    */
-  async cancelMeeting(id: string, _reason?: string): Promise<Meeting> {
+  async cancelMeeting(id: string): Promise<Meeting> {
     return simulateApiDelay(() => {
       const meetingIndex = this.meetings.findIndex(m => m.id === id);
 

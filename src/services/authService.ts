@@ -28,10 +28,10 @@ const generateMockToken = (user: User): AuthToken => {
 };
 
 // Decode mock token
-const decodeMockToken = (token: string): any => {
+const decodeMockToken = (token: string): unknown => {
   try {
     return JSON.parse(atob(token));
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -138,7 +138,7 @@ class AuthService {
         }
 
         return user;
-      } catch (error) {
+      } catch {
         return null;
       }
     }, 200);
