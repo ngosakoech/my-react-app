@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
+import { mockUsers } from '../../mocks/users.mock';
 
 const loginSchema = z.object({
   email: z
@@ -48,14 +49,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
-
-const mockCredentials = [
-  { email: 'john.kamau@unitedwinners.co.ke', role: 'Admin (CEO)' },
-  { email: 'sarah.wanjiru@unitedwinners.co.ke', role: 'Chairperson' },
-  { email: 'peter.omondi@unitedwinners.co.ke', role: 'Secretary' },
-  { email: 'grace.muthoni@unitedwinners.co.ke', role: 'Board Member - Finance' },
-  { email: 'david.kipchoge@unitedwinners.co.ke', role: 'Board Member - Operations' },
-];
 
 export const Login = () => {
   const theme = useTheme();
@@ -404,13 +397,13 @@ export const Login = () => {
                       Demo Accounts (Password: <strong>password123</strong>)
                     </Typography>
                     <Stack spacing={0.5}>
-                      {mockCredentials.map((cred, index) => (
-                        <Box key={index}>
+                      {mockUsers.slice(0, 5).map((user) => (
+                        <Box key={user.id}>
                           <Typography variant="caption" color="text.primary" sx={{ fontSize: '0.7rem' }}>
-                            {cred.email}
+                            {user.email}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" sx={{ ml: 1, fontSize: '0.65rem' }}>
-                            ({cred.role})
+                            ({user.position})
                           </Typography>
                         </Box>
                       ))}
@@ -431,5 +424,3 @@ export const Login = () => {
     </Box>
   );
 };
-
-export default Login;
