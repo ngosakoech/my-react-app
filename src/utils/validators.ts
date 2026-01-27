@@ -165,9 +165,7 @@ export type LoanFormData = z.infer<typeof loanSchema>;
  * Loan recommendation schema
  */
 export const loanRecommendationSchema = z.object({
-  recommendation: z.enum(['approve', 'reject', 'conditional']).refine(val => val, {
-    message: 'Please select a recommendation',
-  }),
+  recommendation: z.enum(['approve', 'reject', 'conditional']),
   comments: z
     .string()
     .min(1, 'Comments are required')
@@ -254,9 +252,7 @@ export type ResolutionFormData = z.infer<typeof resolutionSchema>;
  * Vote submission schema
  */
 export const voteSchema = z.object({
-  decision: z.enum(['yes', 'no', 'abstain']).refine(val => val, {
-    message: 'Please select a vote decision',
-  }),
+  decision: z.enum(['yes', 'no', 'abstain']),
   comment: z
     .string()
     .max(500, 'Comment must be less than 500 characters')
