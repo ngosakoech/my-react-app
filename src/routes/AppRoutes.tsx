@@ -34,8 +34,10 @@ const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
   </Container>
 );
 
+// Pages
+import { Login } from '../pages/auth/Login';
+
 // Placeholder pages
-const LoginPage = () => <PlaceholderPage title="Login Page" />;
 const DashboardPage = () => <PlaceholderPage title="Dashboard" />;
 const MeetingListPage = () => <PlaceholderPage title="Meetings" />;
 const MeetingDetailPage = () => <PlaceholderPage title="Meeting Details" />;
@@ -88,7 +90,7 @@ export const AppRoutes: React.FC = () => {
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         {/* Public routes */}
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.LOGIN} element={<Login />} />
         <Route path={ROUTES.UNAUTHORIZED} element={<UnauthorizedPage />} />
 
         {/* Protected routes - Dashboard */}
