@@ -148,13 +148,13 @@ export const UserManagement = () => {
       id: 'department',
       label: 'Department',
       minWidth: 150,
-      format: (value) => value || 'N/A',
+      format: (value) => (value as string) || 'N/A',
     },
     {
       id: 'position',
       label: 'Position',
       minWidth: 150,
-      format: (value) => value || 'N/A',
+      format: (value) => (value as string) || 'N/A',
     },
     {
       id: 'isActive',
@@ -270,7 +270,7 @@ export const UserManagement = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {stats.map((stat, index) => (
-          <Grid xs={12} sm={6} md={3} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
             <Card>
               <CardContent>
                 <Typography variant="h4" sx={{ color: stat.color, mb: 1 }}>
@@ -288,7 +288,7 @@ export const UserManagement = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2}>
-            <Grid xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 placeholder="Search users..."
@@ -303,7 +303,7 @@ export const UserManagement = () => {
                 }}
               />
             </Grid>
-            <Grid xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 select
@@ -319,7 +319,7 @@ export const UserManagement = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 select
@@ -365,21 +365,21 @@ export const UserManagement = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="First Name"
                 defaultValue={selectedUser?.firstName}
               />
             </Grid>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Last Name"
                 defaultValue={selectedUser?.lastName}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Email"
@@ -387,7 +387,7 @@ export const UserManagement = () => {
                 defaultValue={selectedUser?.email}
               />
             </Grid>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 select
@@ -401,21 +401,21 @@ export const UserManagement = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Phone"
                 defaultValue={selectedUser?.phone}
               />
             </Grid>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Department"
                 defaultValue={selectedUser?.department}
               />
             </Grid>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Position"
