@@ -49,6 +49,7 @@ import { getUpcomingMeetings } from '../../mocks/meetings.mock';
 import { getRecentDocuments, getDocumentsByCategory } from '../../mocks/documents.mock';
 import { MeetingType } from '../../types/meeting.types';
 import { DocumentCategory } from '../../types/document.types';
+import { formatCurrency } from '../../utils/helpers';
 
 export const SubcommitteeDashboard = () => {
   const navigate = useNavigate();
@@ -205,14 +206,6 @@ export const SubcommitteeDashboard = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: 'KES',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
   if (meetingsLoading || documentsLoading) {
     return (
       <AppLayout userRole={user?.role}>
@@ -365,7 +358,7 @@ export const SubcommitteeDashboard = () => {
                         primary={`${loan.applicant} - ${loan.type}`}
                         secondary={
                           <>
-                            Amount: {formatCurrency(loan.amount)} •{' '}
+                            Amount: {formatCurrency(loan.amount, 'KES', 'en-KE')} •{' '}
                             {loan.submittedDate.toLocaleDateString()}
                           </>
                         }

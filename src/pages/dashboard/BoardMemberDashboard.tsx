@@ -54,6 +54,12 @@ import { getRecentDocuments } from '../../mocks/documents.mock';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
+interface LoanPortfolioItem {
+  category: string;
+  value: number;
+  amount: number;
+}
+
 export const BoardMemberDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -104,7 +110,7 @@ export const BoardMemberDashboard = () => {
     { name: 'Document Reviews', value: 85, color: '#FF8042' },
   ];
 
-  const loanPortfolioData = [
+  const loanPortfolioData: LoanPortfolioItem[] = [
     { category: 'Business', value: 35, amount: 45000000 },
     { category: 'Personal', value: 28, amount: 28000000 },
     { category: 'Agriculture', value: 20, amount: 25000000 },
@@ -331,7 +337,10 @@ export const BoardMemberDashboard = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={(entry: any) => `${entry.category} ${entry.value}%`}
+                    label={(props: any) => {
+                      const entry = props as LoanPortfolioItem;
+                      return `${entry.category} ${entry.value}%`;
+                    }}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"

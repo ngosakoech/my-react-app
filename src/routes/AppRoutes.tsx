@@ -36,9 +36,9 @@ const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
 
 // Pages
 import { Login } from '../pages/auth/Login';
+import { Dashboard } from '../pages/dashboard';
 
 // Placeholder pages
-const DashboardPage = () => <PlaceholderPage title="Dashboard" />;
 const MeetingListPage = () => <PlaceholderPage title="Meetings" />;
 const MeetingDetailPage = () => <PlaceholderPage title="Meeting Details" />;
 const MeetingCreatePage = () => <PlaceholderPage title="Create Meeting" />;
@@ -98,7 +98,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.DASHBOARD}
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <Dashboard />
             </ProtectedRoute>
           }
         />
