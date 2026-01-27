@@ -163,7 +163,7 @@ export const VotingResults = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -279,7 +279,7 @@ export const VotingResults = () => {
               </Box>
 
               <Grid container spacing={3}>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -305,7 +305,7 @@ export const VotingResults = () => {
                   </ResponsiveContainer>
                 </Grid>
 
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={barData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -321,7 +321,7 @@ export const VotingResults = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>

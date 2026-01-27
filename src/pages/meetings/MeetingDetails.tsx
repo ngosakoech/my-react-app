@@ -36,7 +36,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { mockMeetings } from '../../mocks/meetings.mock';
 import { mockUsers } from '../../mocks/users.mock';
 import { mockDocuments } from '../../mocks/documents.mock';
-import { Meeting } from '../../types';
+import { type Meeting } from '../../types';
 import { format } from 'date-fns';
 
 interface TabPanelProps {
@@ -138,7 +138,7 @@ export const MeetingDetails = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card>
             <Tabs
               value={tabValue}
@@ -307,7 +307,7 @@ export const MeetingDetails = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>

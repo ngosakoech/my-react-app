@@ -78,12 +78,12 @@ export const CreateResolution = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card>
             <CardContent>
               <form>
                 <Grid container spacing={3}>
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Controller
                       name="title"
                       control={control}
@@ -100,7 +100,7 @@ export const CreateResolution = () => {
                     />
                   </Grid>
 
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Controller
                       name="description"
                       control={control}
@@ -119,7 +119,7 @@ export const CreateResolution = () => {
                     />
                   </Grid>
 
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Controller
                       name="category"
                       control={control}
@@ -143,7 +143,7 @@ export const CreateResolution = () => {
                     />
                   </Grid>
 
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Controller
                       name="votingRule"
                       control={control}
@@ -166,7 +166,7 @@ export const CreateResolution = () => {
                     />
                   </Grid>
 
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Controller
                       name="votingDeadline"
                       control={control}
@@ -184,7 +184,7 @@ export const CreateResolution = () => {
                     />
                   </Grid>
 
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Controller
                       name="relatedMeetingId"
                       control={control}
@@ -199,7 +199,7 @@ export const CreateResolution = () => {
                     />
                   </Grid>
 
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Controller
                       name="isAnonymous"
                       control={control}
@@ -222,7 +222,7 @@ export const CreateResolution = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>

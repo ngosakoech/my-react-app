@@ -27,7 +27,7 @@ import {
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { mockLoans } from '../../mocks/loans.mock';
-import { LoanApplication } from '../../types';
+import { type LoanApplication } from '../../types';
 import { format } from 'date-fns';
 
 const recommendationSchema = z.object({
@@ -142,7 +142,7 @@ export const LoanAppraisal = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={7}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -150,25 +150,25 @@ export const LoanAppraisal = () => {
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Grid container spacing={2}>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Full Name
                   </Typography>
                   <Typography variant="body1">{loan.applicantName}</Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Email
                   </Typography>
                   <Typography variant="body1">{loan.applicantEmail}</Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Phone
                   </Typography>
                   <Typography variant="body1">{loan.applicantPhone}</Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Credit Score
                   </Typography>
@@ -176,7 +176,7 @@ export const LoanAppraisal = () => {
                     {loan.creditScore || 'N/A'}
                   </Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Annual Income
                   </Typography>
@@ -184,7 +184,7 @@ export const LoanAppraisal = () => {
                     {loan.income ? `KSH ${loan.income.toLocaleString()}` : 'N/A'}
                   </Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Collateral
                   </Typography>
@@ -201,7 +201,7 @@ export const LoanAppraisal = () => {
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Grid container spacing={2}>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Loan Type
                   </Typography>
@@ -209,7 +209,7 @@ export const LoanAppraisal = () => {
                     <Chip label={loan.loanType} size="small" color="primary" />
                   </Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Amount Requested
                   </Typography>
@@ -217,13 +217,13 @@ export const LoanAppraisal = () => {
                     KSH {loan.amount.toLocaleString()}
                   </Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Repayment Term
                   </Typography>
                   <Typography variant="body1">{loan.term} months</Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Submitted Date
                   </Typography>
@@ -231,7 +231,7 @@ export const LoanAppraisal = () => {
                     {format(new Date(loan.submittedDate), 'PP')}
                   </Typography>
                 </Grid>
-                <Grid xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Typography variant="caption" color="text.secondary">
                     Purpose
                   </Typography>
@@ -249,7 +249,7 @@ export const LoanAppraisal = () => {
               <Divider sx={{ my: 2 }} />
               <form onSubmit={handleSubmit(onSubmit)}>
                 <Grid container spacing={2}>
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Controller
                       name="recommendation"
                       control={control}
@@ -271,7 +271,7 @@ export const LoanAppraisal = () => {
                   </Grid>
 
                   {recommendation === 'conditional' && (
-                    <Grid xs={12}>
+                    <Grid size={{ xs: 12 }}>
                       <Controller
                         name="conditions"
                         control={control}
@@ -289,7 +289,7 @@ export const LoanAppraisal = () => {
                     </Grid>
                   )}
 
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Controller
                       name="comments"
                       control={control}
@@ -308,7 +308,7 @@ export const LoanAppraisal = () => {
                     />
                   </Grid>
 
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                       <Button
                         variant="outlined"
@@ -339,7 +339,7 @@ export const LoanAppraisal = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} md={5}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>

@@ -27,7 +27,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { mockLoans } from '../../mocks/loans.mock';
-import { LoanApplication } from '../../types';
+import { type LoanApplication } from '../../types';
 import { format } from 'date-fns';
 
 interface TabPanelProps {
@@ -133,7 +133,7 @@ export const LoanDetails = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card>
             <Tabs
               value={tabValue}
@@ -152,25 +152,25 @@ export const LoanDetails = () => {
                 </Typography>
                 <Divider sx={{ my: 2 }} />
                 <Grid container spacing={2}>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Full Name
                     </Typography>
                     <Typography variant="body1">{loan.applicantName}</Typography>
                   </Grid>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Email
                     </Typography>
                     <Typography variant="body1">{loan.applicantEmail}</Typography>
                   </Grid>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Phone
                     </Typography>
                     <Typography variant="body1">{loan.applicantPhone}</Typography>
                   </Grid>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Credit Score
                     </Typography>
@@ -178,7 +178,7 @@ export const LoanDetails = () => {
                       {loan.creditScore || 'N/A'}
                     </Typography>
                   </Grid>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Annual Income
                     </Typography>
@@ -186,7 +186,7 @@ export const LoanDetails = () => {
                       {loan.income ? `KSH ${loan.income.toLocaleString()}` : 'N/A'}
                     </Typography>
                   </Grid>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Collateral
                     </Typography>
@@ -199,7 +199,7 @@ export const LoanDetails = () => {
                 </Typography>
                 <Divider sx={{ my: 2 }} />
                 <Grid container spacing={2}>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Amount Requested
                     </Typography>
@@ -207,19 +207,19 @@ export const LoanDetails = () => {
                       KSH {loan.amount.toLocaleString()}
                     </Typography>
                   </Grid>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Repayment Term
                     </Typography>
                     <Typography variant="body1">{loan.term} months</Typography>
                   </Grid>
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Typography variant="caption" color="text.secondary">
                       Purpose
                     </Typography>
                     <Typography variant="body1">{loan.purpose}</Typography>
                   </Grid>
-                  <Grid xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="caption" color="text.secondary">
                       Submitted Date
                     </Typography>
@@ -228,7 +228,7 @@ export const LoanDetails = () => {
                     </Typography>
                   </Grid>
                   {loan.disbursementDate && (
-                    <Grid xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="caption" color="text.secondary">
                         Disbursement Date
                       </Typography>
@@ -335,7 +335,7 @@ export const LoanDetails = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>

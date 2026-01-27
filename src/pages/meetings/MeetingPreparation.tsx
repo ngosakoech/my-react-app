@@ -28,7 +28,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { mockMeetings } from '../../mocks/meetings.mock';
 import { mockDocuments } from '../../mocks/documents.mock';
-import { Meeting } from '../../types';
+import { type Meeting } from '../../types';
 import { format } from 'date-fns';
 
 export const MeetingPreparation = () => {
@@ -110,7 +110,7 @@ export const MeetingPreparation = () => {
       </Alert>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -225,7 +225,7 @@ export const MeetingPreparation = () => {
           </Card>
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>

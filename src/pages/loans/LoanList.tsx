@@ -183,7 +183,7 @@ export const LoanList = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {stats.map((stat, index) => (
-          <Grid xs={12} sm={6} md={3} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
             <Card>
               <CardContent>
                 <Typography variant="h4" sx={{ color: stat.color, mb: 1 }}>
@@ -201,7 +201,7 @@ export const LoanList = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2}>
-            <Grid xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 placeholder="Search loans..."
@@ -216,7 +216,7 @@ export const LoanList = () => {
                 }}
               />
             </Grid>
-            <Grid xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 select
@@ -232,7 +232,7 @@ export const LoanList = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 select
@@ -248,7 +248,7 @@ export const LoanList = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 select
