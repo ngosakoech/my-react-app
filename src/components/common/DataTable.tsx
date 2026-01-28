@@ -49,7 +49,7 @@ interface DataTableProps<T> {
 
 type Order = 'asc' | 'desc';
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends Record<string, any>>({
   columns,
   rows,
   rowKey,

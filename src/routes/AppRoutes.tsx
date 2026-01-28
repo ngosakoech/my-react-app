@@ -1,9 +1,10 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Container } from '@mui/material';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from '../utils/constants';
 import { UserRole } from '../types/auth.types';
+import { useAuth } from '../contexts/AuthContext';
 
 // Loading component
 const LoadingFallback: React.FC = () => (
@@ -22,42 +23,46 @@ const LoadingFallback: React.FC = () => (
   </Box>
 );
 
-// Placeholder component for pages not yet implemented
-const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
-  <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-    <Typography variant="h4" gutterBottom>
-      {title}
-    </Typography>
-    <Typography variant="body1" color="text.secondary">
-      This page is under construction. Components need to be created in the pages directory.
-    </Typography>
-  </Container>
-);
+// Lazy load pages for better performance
+const Login = lazy(() => import('../pages/auth/Login').then(m => ({ default: m.Login })));
+const AdminDashboard = lazy(() => import('../pages/dashboard/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const BoardMemberDashboard = lazy(() => import('../pages/dashboard/BoardMemberDashboard').then(m => ({ default: m.BoardMemberDashboard })));
+const SubcommitteeDashboard = lazy(() => import('../pages/dashboard/SubcommitteeDashboard').then(m => ({ default: m.SubcommitteeDashboard })));
+const MeetingList = lazy(() => import('../pages/meetings/MeetingList').then(m => ({ default: m.MeetingList })));
+const MeetingDetails = lazy(() => import('../pages/meetings/MeetingDetails').then(m => ({ default: m.MeetingDetails })));
+const MeetingPreparation = lazy(() => import('../pages/meetings/MeetingPreparation').then(m => ({ default: m.MeetingPreparation })));
+const LoanList = lazy(() => import('../pages/loans/LoanList').then(m => ({ default: m.LoanList })));
+const LoanDetails = lazy(() => import('../pages/loans/LoanDetails').then(m => ({ default: m.LoanDetails })));
+const LoanAppraisal = lazy(() => import('../pages/loans/LoanAppraisal').then(m => ({ default: m.LoanAppraisal })));
+const DocumentLibrary = lazy(() => import('../pages/documents/DocumentLibrary').then(m => ({ default: m.DocumentLibrary })));
+const DocumentViewer = lazy(() => import('../pages/documents/DocumentViewer').then(m => ({ default: m.DocumentViewer })));
+const VotingList = lazy(() => import('../pages/voting/VotingList').then(m => ({ default: m.VotingList })));
+const CreateResolution = lazy(() => import('../pages/voting/CreateResolution').then(m => ({ default: m.CreateResolution })));
+const VotingResults = lazy(() => import('../pages/voting/VotingResults').then(m => ({ default: m.VotingResults })));
+const AnalyticsDashboard = lazy(() => import('../pages/analytics/AnalyticsDashboard').then(m => ({ default: m.AnalyticsDashboard })));
+const UserManagement = lazy(() => import('../pages/users/UserManagement').then(m => ({ default: m.UserManagement })));
 
-// Placeholder pages
-const LoginPage = () => <PlaceholderPage title="Login Page" />;
-const DashboardPage = () => <PlaceholderPage title="Dashboard" />;
-const MeetingListPage = () => <PlaceholderPage title="Meetings" />;
-const MeetingDetailPage = () => <PlaceholderPage title="Meeting Details" />;
-const MeetingCreatePage = () => <PlaceholderPage title="Create Meeting" />;
-const MeetingEditPage = () => <PlaceholderPage title="Edit Meeting" />;
-const DocumentListPage = () => <PlaceholderPage title="Documents" />;
-const DocumentDetailPage = () => <PlaceholderPage title="Document Details" />;
-const DocumentUploadPage = () => <PlaceholderPage title="Upload Document" />;
-const VotingListPage = () => <PlaceholderPage title="Resolutions & Voting" />;
-const VotingDetailPage = () => <PlaceholderPage title="Resolution Details" />;
-const VotingCreatePage = () => <PlaceholderPage title="Create Resolution" />;
-const LoanListPage = () => <PlaceholderPage title="Loan Applications" />;
-const LoanDetailPage = () => <PlaceholderPage title="Loan Details" />;
-const LoanCreatePage = () => <PlaceholderPage title="Apply for Loan" />;
-const LoanReviewPage = () => <PlaceholderPage title="Review Loan" />;
-const UserListPage = () => <PlaceholderPage title="Users" />;
-const UserDetailPage = () => <PlaceholderPage title="User Details" />;
-const UserCreatePage = () => <PlaceholderPage title="Create User" />;
-const UserEditPage = () => <PlaceholderPage title="Edit User" />;
-const ProfilePage = () => <PlaceholderPage title="My Profile" />;
-const ProfileEditPage = () => <PlaceholderPage title="Edit Profile" />;
-const SettingsPage = () => <PlaceholderPage title="Settings" />;
+// Role-based dashboard router
+const DashboardRouter: React.FC = () => {
+  const { user } = useAuth();
+
+  if (!user) return <Navigate to={ROUTES.LOGIN} replace />;
+
+  switch (user.role) {
+    case UserRole.ADMIN:
+      return <AdminDashboard />;
+    case UserRole.BOARD_MEMBER:
+    case UserRole.CHAIRPERSON:
+    case UserRole.SECRETARY:
+      return <BoardMemberDashboard />;
+    case UserRole.SUBCOMMITTEE_MEMBER:
+      return <SubcommitteeDashboard />;
+    default:
+      return <BoardMemberDashboard />;
+  }
+};
+
+// Error pages
 const UnauthorizedPage = () => (
   <Container maxWidth="lg" sx={{ mt: 8, textAlign: 'center' }}>
     <Typography variant="h3" gutterBottom color="error">
@@ -68,6 +73,7 @@ const UnauthorizedPage = () => (
     </Typography>
   </Container>
 );
+
 const NotFoundPage = () => (
   <Container maxWidth="lg" sx={{ mt: 8, textAlign: 'center' }}>
     <Typography variant="h3" gutterBottom color="error">
@@ -88,7 +94,7 @@ export const AppRoutes: React.FC = () => {
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         {/* Public routes */}
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.LOGIN} element={<Login />} />
         <Route path={ROUTES.UNAUTHORIZED} element={<UnauthorizedPage />} />
 
         {/* Protected routes - Dashboard */}
@@ -96,7 +102,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.DASHBOARD}
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <DashboardRouter />
             </ProtectedRoute>
           }
         />
@@ -114,7 +120,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.MEETINGS_LIST}
           element={
             <ProtectedRoute requirePermission="meetings:view">
-              <MeetingListPage />
+              <MeetingList />
             </ProtectedRoute>
           }
         />
@@ -122,23 +128,15 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.MEETINGS_DETAIL}
           element={
             <ProtectedRoute requirePermission="meetings:view">
-              <MeetingDetailPage />
+              <MeetingDetails />
             </ProtectedRoute>
           }
         />
         <Route
-          path={ROUTES.MEETINGS_CREATE}
+          path="/meetings/:id/prepare"
           element={
-            <ProtectedRoute requirePermission="meetings:create">
-              <MeetingCreatePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.MEETINGS_EDIT}
-          element={
-            <ProtectedRoute requirePermission="meetings:edit">
-              <MeetingEditPage />
+            <ProtectedRoute requirePermission="meetings:view">
+              <MeetingPreparation />
             </ProtectedRoute>
           }
         />
@@ -156,7 +154,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.DOCUMENTS_LIST}
           element={
             <ProtectedRoute requirePermission="documents:view">
-              <DocumentListPage />
+              <DocumentLibrary />
             </ProtectedRoute>
           }
         />
@@ -164,15 +162,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.DOCUMENTS_DETAIL}
           element={
             <ProtectedRoute requirePermission="documents:view">
-              <DocumentDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.DOCUMENTS_UPLOAD}
-          element={
-            <ProtectedRoute requirePermission="documents:upload">
-              <DocumentUploadPage />
+              <DocumentViewer />
             </ProtectedRoute>
           }
         />
@@ -190,7 +180,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.VOTING_LIST}
           element={
             <ProtectedRoute requirePermission="voting:view">
-              <VotingListPage />
+              <VotingList />
             </ProtectedRoute>
           }
         />
@@ -198,7 +188,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.VOTING_DETAIL}
           element={
             <ProtectedRoute requirePermission="voting:view">
-              <VotingDetailPage />
+              <VotingResults />
             </ProtectedRoute>
           }
         />
@@ -206,7 +196,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.VOTING_CREATE}
           element={
             <ProtectedRoute requirePermission="voting:create">
-              <VotingCreatePage />
+              <CreateResolution />
             </ProtectedRoute>
           }
         />
@@ -224,7 +214,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.LOANS_LIST}
           element={
             <ProtectedRoute requirePermission="loans:view">
-              <LoanListPage />
+              <LoanList />
             </ProtectedRoute>
           }
         />
@@ -232,20 +222,12 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.LOANS_DETAIL}
           element={
             <ProtectedRoute requirePermission="loans:view">
-              <LoanDetailPage />
+              <LoanDetails />
             </ProtectedRoute>
           }
         />
         <Route
-          path={ROUTES.LOANS_CREATE}
-          element={
-            <ProtectedRoute>
-              <LoanCreatePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.LOANS_REVIEW}
+          path="/loans/:id/appraise"
           element={
             <ProtectedRoute
               allowedRoles={[
@@ -254,7 +236,17 @@ export const AppRoutes: React.FC = () => {
                 UserRole.SUBCOMMITTEE_MEMBER,
               ]}
             >
-              <LoanReviewPage />
+              <LoanAppraisal />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Analytics route */}
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute requirePermission="analytics:view">
+              <AnalyticsDashboard />
             </ProtectedRoute>
           }
         />
@@ -272,57 +264,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.USERS_LIST}
           element={
             <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.CHAIRPERSON]}>
-              <UserListPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.USERS_DETAIL}
-          element={
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.CHAIRPERSON]}>
-              <UserDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.USERS_CREATE}
-          element={
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-              <UserCreatePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.USERS_EDIT}
-          element={
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-              <UserEditPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Profile routes */}
-        <Route
-          path={ROUTES.PROFILE}
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.PROFILE_EDIT}
-          element={
-            <ProtectedRoute>
-              <ProfileEditPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path={ROUTES.PROFILE_SETTINGS}
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
+              <UserManagement />
             </ProtectedRoute>
           }
         />

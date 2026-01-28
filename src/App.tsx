@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
+// Theme
+import lightTheme from './theme/theme';
+
+// Contexts
+import { AuthProvider } from './contexts/AuthContext';
+import { MeetingProvider } from './contexts/MeetingContext';
+import { DocumentProvider } from './contexts/DocumentContext';
+import { VotingProvider } from './contexts/VotingContext';
+
+// Routes
+import { AppRoutes } from './routes/AppRoutes';
+
+// Layout
+import { AppLayout } from './components/layout/AppLayout';
+
+/**
+ * Main App component
+ * Provides global context providers, theme, and routing
+ */
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <BrowserRouter>
+      <ThemeProvider theme={lightTheme}>
+        <CssBaseline />
+        <AuthProvider>
+          <MeetingProvider>
+            <DocumentProvider>
+              <VotingProvider>
+                <AppLayout>
+                  <AppRoutes />
+                </AppLayout>
+                <ToastContainer
+                  position="top-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="light"
+                />
+              </VotingProvider>
+            </DocumentProvider>
+          </MeetingProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

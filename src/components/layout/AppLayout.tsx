@@ -1,24 +1,23 @@
 import { useState, type ReactNode } from 'react';
 import { Box, Container, Toolbar, Breadcrumbs, Link, Typography } from '@mui/material';
 import { useLocation, Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
-import { UserRole } from '../../types/auth.types';
 
 interface AppLayoutProps {
   children: ReactNode;
-  userRole?: UserRole;
-  notificationCount?: number;
 }
 
-export const AppLayout = ({ 
-  children, 
-  userRole = UserRole.BOARD_MEMBER,
-  notificationCount = 0 
-}: AppLayoutProps) => {
+export const AppLayout = ({ children }: AppLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated, user } = useAuth();
+
+  // Don't show layout on login page or when not authenticated
+  const isLoginPage = location.pathname === '/login';
+  const showLayout = isAuthenticated && !isLoginPage;
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -66,15 +65,20 @@ export const AppLayout = ({
     );
   };
 
+  // If not showing layout, just render children
+  if (!showLayout) {
+    return <>{children}</>;
+  }
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
-      <Header onMenuClick={handleDrawerToggle} notificationCount={notificationCount} />
+      <Header onMenuClick={handleDrawerToggle} />
       
       <Box sx={{ display: 'flex', flex: 1 }}>
         <Sidebar 
           open={mobileOpen} 
           onClose={handleDrawerToggle}
-          userRole={userRole}
+          userRole={user?.role}
         />
         
         <Box
