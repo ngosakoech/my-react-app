@@ -1,42 +1,52 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
+  Button,
+  Paper,
+  Chip,
+  Tabs,
+  Tab,
   Card,
   CardContent,
-  Grid,
-  Chip,
-  Button,
-  Divider,
   List,
   ListItem,
   ListItemText,
   ListItemAvatar,
   Avatar,
-  Tabs,
-  Tab,
+  Divider,
   IconButton,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Breadcrumbs,
   Link,
+  Checkbox
 } from '@mui/material';
 import {
   Edit as EditIcon,
-  Delete as DeleteIcon,
+  PlayArrow as StartIcon,
+  VideoCall as JoinIcon,
   Download as DownloadIcon,
+  CalendarToday as CalendarIcon,
+  LocationOn as LocationIcon,
+  AccessTime as TimeIcon,
   Person as PersonIcon,
   Description as DescriptionIcon,
-  Assignment as AssignmentIcon,
-  Notes as NotesIcon,
-  ArrowBack as ArrowBackIcon,
+  CheckCircle as CheckCircleIcon,
+  ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { AppLayout } from '../../components/layout/AppLayout';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { EmptyState } from '../../components/common/EmptyState';
-import { mockMeetings } from '../../mocks/meetings.mock';
-import { mockUsers } from '../../mocks/users.mock';
-import { mockDocuments } from '../../mocks/documents.mock';
-import { type Meeting } from '../../types';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useMeetingContext } from '../../contexts/MeetingContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { MeetingStatus, MeetingType } from '../../types/meeting.types';
 import { format } from 'date-fns';
 
 interface TabPanelProps {
@@ -45,339 +55,487 @@ interface TabPanelProps {
   value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+const TabPanel = ({ children, value, index }: TabPanelProps) => (
+  <div role="tabpanel" hidden={value !== index}>
+    {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+  </div>
+);
+
+const meetingTypeLabels: Record<string, string> = {
+  [MeetingType.BOARD]: 'Board Meeting',
+  [MeetingType.SUBCOMMITTEE]: 'Subcommittee',
+  [MeetingType.EMERGENCY]: 'Emergency',
+  [MeetingType.ANNUAL]: 'Annual',
+  [MeetingType.SPECIAL]: 'Special'
+};
+
+const meetingStatusLabels: Record<string, string> = {
+  [MeetingStatus.SCHEDULED]: 'Scheduled',
+  [MeetingStatus.IN_PROGRESS]: 'In Progress',
+  [MeetingStatus.COMPLETED]: 'Completed',
+  [MeetingStatus.CANCELLED]: 'Cancelled'
+};
 
 export const MeetingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [meeting, setMeeting] = useState<Meeting | null>(null);
-  const [tabValue, setTabValue] = useState(0);
+  const { user } = useAuth();
+  const { selectedMeeting, loading, error, getMeeting } = useMeetingContext();
+  
+  const [activeTab, setActiveTab] = useState(0);
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'board_member';
 
   useEffect(() => {
-    const loadMeeting = async () => {
-      setLoading(true);
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        const foundMeeting = mockMeetings.find((m) => m.id === id);
-        setMeeting(foundMeeting || null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (id) {
+      getMeeting(id);
+    }
+  }, [id, getMeeting]);
 
-    loadMeeting();
-  }, [id]);
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+  const handleEdit = () => {
+    if (id) {
+      navigate(`/meetings/edit/${id}`);
+    }
+  };
+
+  const handleStartMeeting = () => {
+    console.log('Start meeting:', id);
+  };
+
+  const handleJoinMeeting = () => {
+    console.log('Join meeting:', id);
+  };
+
+  const handleDownloadMinutes = () => {
+    console.log('Download minutes for meeting:', id);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case MeetingStatus.SCHEDULED:
+        return 'info';
+      case MeetingStatus.IN_PROGRESS:
+        return 'warning';
+      case MeetingStatus.COMPLETED:
+        return 'success';
+      case MeetingStatus.CANCELLED:
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
 
   if (loading) {
-    return <LoadingSpinner message="Loading meeting details..." />;
-  }
-
-  if (!meeting) {
     return (
-      <EmptyState
-        title="Meeting not found"
-        description="The meeting you're looking for doesn't exist"
-        action={
-          <Button variant="contained" onClick={() => navigate('/meetings')}>
-            Back to Meetings
-          </Button>
-        }
-      />
+      <AppLayout>
+        <LoadingSpinner />
+      </AppLayout>
     );
   }
 
-  const attendeeUsers = mockUsers.filter((user) =>
-    meeting.attendees.includes(user.id)
-  );
+  if (error || !selectedMeeting) {
+    return (
+      <AppLayout>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error || 'Meeting not found'}
+        </Alert>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/meetings')}>
+          Back to Meetings
+        </Button>
+      </AppLayout>
+    );
+  }
 
-  const meetingDocuments = mockDocuments.filter((doc) =>
-    meeting.documents.includes(doc.id)
-  );
+  const meeting = selectedMeeting;
 
   return (
-    <Box>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link
-          underline="hover"
-          color="inherit"
-          onClick={() => navigate('/meetings')}
-          sx={{ cursor: 'pointer' }}
-        >
-          Meetings
-        </Link>
-        <Typography color="text.primary">{meeting.title}</Typography>
-      </Breadcrumbs>
+    <AppLayout>
+      <Box sx={{ mb: 4 }}>
+        <Breadcrumbs sx={{ mb: 2 }}>
+          <Link
+            component="button"
+            variant="body1"
+            onClick={() => navigate('/meetings')}
+            sx={{ textDecoration: 'none', cursor: 'pointer' }}
+          >
+            Meetings
+          </Link>
+          <Typography color="text.primary">{meeting.title}</Typography>
+        </Breadcrumbs>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-        <IconButton onClick={() => navigate('/meetings')}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" gutterBottom>
-            {meeting.title}
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <StatusBadge status={meeting.status} />
-            <Chip label={meeting.type} size="small" />
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              {meeting.title}
+            </Typography>
+            <Box display="flex" gap={1} alignItems="center">
+              <Chip
+                label={meetingTypeLabels[meeting.type]}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+              <StatusBadge
+                status={getStatusColor(meeting.status)}
+                label={meetingStatusLabels[meeting.status]}
+              />
+            </Box>
+          </Box>
+
+          <Box display="flex" gap={1}>
+            {meeting.status === MeetingStatus.IN_PROGRESS && (
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<JoinIcon />}
+                onClick={handleJoinMeeting}
+              >
+                Join Meeting
+              </Button>
+            )}
+            {meeting.status === MeetingStatus.SCHEDULED && isAdmin && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<StartIcon />}
+                onClick={handleStartMeeting}
+              >
+                Start Meeting
+              </Button>
+            )}
+            {isAdmin && (
+              <Button
+                variant="outlined"
+                startIcon={<EditIcon />}
+                onClick={handleEdit}
+              >
+                Edit
+              </Button>
+            )}
+            <IconButton onClick={() => navigate('/meetings')}>
+              <ArrowBackIcon />
+            </IconButton>
           </Box>
         </Box>
-        <Button startIcon={<EditIcon />} variant="outlined">
-          Edit
-        </Button>
-        <Button startIcon={<DeleteIcon />} variant="outlined" color="error">
-          Cancel
-        </Button>
-      </Box>
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Card>
-            <Tabs
-              value={tabValue}
-              onChange={(_, newValue) => setTabValue(newValue)}
-              sx={{ borderBottom: 1, borderColor: 'divider' }}
-            >
-              <Tab label="Agenda" icon={<AssignmentIcon />} iconPosition="start" />
-              <Tab label="Attendees" icon={<PersonIcon />} iconPosition="start" />
-              <Tab label="Documents" icon={<DescriptionIcon />} iconPosition="start" />
-              <Tab label="Minutes" icon={<NotesIcon />} iconPosition="start" />
-            </Tabs>
+        <Paper sx={{ mb: 3 }}>
+          <Tabs value={activeTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tab label="Overview" />
+            <Tab label={`Agenda (${meeting.agenda.length})`} />
+            <Tab label={`Documents (${meeting.documents.length})`} />
+            <Tab label="Minutes" />
+            <Tab label={`Attendees (${meeting.attendees.length})`} />
+          </Tabs>
 
-            <TabPanel value={tabValue} index={0}>
-              <CardContent>
-                {meeting.agenda.length > 0 ? (
-                  <List>
-                    {meeting.agenda.map((item, index) => (
-                      <Box key={item.id}>
-                        {index > 0 && <Divider sx={{ my: 2 }} />}
-                        <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                          <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: 'primary.main' }}>
-                              {item.order}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="subtitle1" fontWeight="bold">
-                                  {item.title}
-                                </Typography>
-                                {item.isCompleted && (
-                                  <Chip label="Completed" size="small" color="success" />
-                                )}
-                              </Box>
-                            }
-                            secondary={
-                              <>
-                                <Typography variant="body2" color="text.secondary" paragraph>
-                                  {item.description}
-                                </Typography>
-                                <Typography variant="caption">
-                                  Presenter: {item.presenter} • Duration: {item.duration} minutes
-                                </Typography>
-                              </>
-                            }
-                          />
-                        </ListItem>
+          <TabPanel value={activeTab} index={0}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Meeting Details
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
+                    <Box display="flex" alignItems="center" gap={1} mb={2}>
+                      <CalendarIcon color="action" />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Date
+                        </Typography>
+                        <Typography variant="body1">
+                          {format(new Date(meeting.date), 'MMMM dd, yyyy')}
+                        </Typography>
                       </Box>
-                    ))}
-                  </List>
-                ) : (
-                  <EmptyState
-                    icon={AssignmentIcon}
-                    title="No agenda items"
-                    description="Agenda items will appear here"
-                  />
-                )}
-              </CardContent>
-            </TabPanel>
-
-            <TabPanel value={tabValue} index={1}>
-              <CardContent>
-                {attendeeUsers.length > 0 ? (
-                  <List>
-                    {attendeeUsers.map((user) => (
-                      <ListItem key={user.id}>
-                        <ListItemAvatar>
-                          <Avatar src={user.avatar}>
-                            {user.firstName[0]}
-                            {user.lastName[0]}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={`${user.firstName} ${user.lastName}`}
-                          secondary={`${user.role} • ${user.email}`}
-                        />
-                        <Chip
-                          label={user.isActive ? 'Active' : 'Inactive'}
-                          size="small"
-                          color={user.isActive ? 'success' : 'default'}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <EmptyState
-                    icon={PersonIcon}
-                    title="No attendees"
-                    description="Attendees will be listed here"
-                  />
-                )}
-              </CardContent>
-            </TabPanel>
-
-            <TabPanel value={tabValue} index={2}>
-              <CardContent>
-                {meetingDocuments.length > 0 ? (
-                  <List>
-                    {meetingDocuments.map((doc) => (
-                      <ListItem
-                        key={doc.id}
-                        secondaryAction={
-                          <IconButton edge="end">
-                            <DownloadIcon />
-                          </IconButton>
-                        }
-                      >
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: 'info.main' }}>
-                            <DescriptionIcon />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={doc.title}
-                          secondary={`${doc.type} • ${(doc.size / 1024).toFixed(2)} KB`}
-                        />
-                        <Chip label={doc.category} size="small" sx={{ mr: 2 }} />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <EmptyState
-                    icon={DescriptionIcon}
-                    title="No documents"
-                    description="Meeting documents will appear here"
-                  />
-                )}
-              </CardContent>
-            </TabPanel>
-
-            <TabPanel value={tabValue} index={3}>
-              <CardContent>
-                {meeting.minutes ? (
-                  <Box>
-                    <Typography variant="body1" paragraph>
-                      {meeting.minutes.content}
-                    </Typography>
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Prepared by: {meeting.minutes.preparedBy}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {format(new Date(meeting.minutes.preparedDate), 'PPP')}
-                      </Typography>
                     </Box>
-                    {meeting.minutes.isApproved && (
-                      <Chip
-                        label="Approved"
-                        color="success"
-                        size="small"
-                        sx={{ mt: 2 }}
-                      />
-                    )}
+
+                    <Box display="flex" alignItems="center" gap={1} mb={2}>
+                      <TimeIcon color="action" />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Time
+                        </Typography>
+                        <Typography variant="body1">{meeting.time}</Typography>
+                      </Box>
+                    </Box>
+
+                    <Box display="flex" alignItems="center" gap={1} mb={2} sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}>
+                      <LocationIcon color="action" />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Location
+                        </Typography>
+                        <Typography variant="body1">{meeting.location}</Typography>
+                      </Box>
+                    </Box>
+
+                    <Box display="flex" alignItems="flex-start" gap={1} sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}>
+                      <PersonIcon color="action" sx={{ mt: 0.5 }} />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Created By
+                        </Typography>
+                        <Typography variant="body1">{meeting.createdBy}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {format(new Date(meeting.createdDate), 'MMM dd, yyyy')}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
-                ) : (
-                  <EmptyState
-                    icon={NotesIcon}
-                    title="No minutes available"
-                    description="Meeting minutes will be added after the meeting"
-                  />
-                )}
-              </CardContent>
-            </TabPanel>
-          </Card>
-        </Grid>
+                </CardContent>
+              </Card>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Meeting Information
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Date & Time
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Quick Stats
                   </Typography>
-                  <Typography variant="body2">
-                    {format(new Date(meeting.date), 'PPPp')}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {meeting.time}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Location
-                  </Typography>
-                  <Typography variant="body2">{meeting.location}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Created By
-                  </Typography>
-                  <Typography variant="body2">{meeting.createdBy}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Created Date
-                  </Typography>
-                  <Typography variant="body2">
-                    {format(new Date(meeting.createdDate), 'PPP')}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+                  <Divider sx={{ mb: 2 }} />
 
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
+                  <Box mb={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      Agenda Items
+                    </Typography>
+                    <Typography variant="h4">{meeting.agenda.length}</Typography>
+                  </Box>
+
+                  <Box mb={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      Attendees
+                    </Typography>
+                    <Typography variant="h4">{meeting.attendees.length}</Typography>
+                  </Box>
+
+                  <Box mb={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      Documents
+                    </Typography>
+                    <Typography variant="h4">{meeting.documents.length}</Typography>
+                  </Box>
+
+                  {meeting.minutes && (
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Minutes Status
+                      </Typography>
+                      <StatusBadge
+                        status={meeting.minutes.isApproved ? 'approved' : 'pending'}
+                        label={meeting.minutes.isApproved ? 'Approved' : 'Pending'}
+                      />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Box>
+          </TabPanel>
+
+          <TabPanel value={activeTab} index={1}>
+            <Typography variant="h6" gutterBottom>
+              Agenda Items
+            </Typography>
+            {meeting.agenda.length === 0 ? (
+              <Alert severity="info">No agenda items have been added yet.</Alert>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell width="50px">#</TableCell>
+                      <TableCell>Title</TableCell>
+                      <TableCell>Presenter</TableCell>
+                      <TableCell>Duration</TableCell>
+                      <TableCell>Documents</TableCell>
+                      <TableCell align="center">Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {meeting.agenda.map((item) => (
+                      <TableRow key={item.id} hover>
+                        <TableCell>{item.order}</TableCell>
+                        <TableCell>
+                          <Typography variant="body1" fontWeight={500}>
+                            {item.title}
+                          </Typography>
+                          {item.description && (
+                            <Typography variant="body2" color="text.secondary">
+                              {item.description}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>{item.presenter}</TableCell>
+                        <TableCell>{item.duration} min</TableCell>
+                        <TableCell>
+                          {item.documents && item.documents.length > 0 ? (
+                            <Chip
+                              size="small"
+                              label={`${item.documents.length} docs`}
+                              variant="outlined"
+                            />
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell align="center">
+                          {item.isCompleted ? (
+                            <CheckCircleIcon color="success" />
+                          ) : (
+                            <Checkbox disabled />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </TabPanel>
+
+          <TabPanel value={activeTab} index={2}>
+            <Typography variant="h6" gutterBottom>
+              Documents
+            </Typography>
+            {meeting.documents.length === 0 ? (
+              <Alert severity="info">No documents have been attached.</Alert>
+            ) : (
+              <List>
+                {meeting.documents.map((doc, index) => (
+                  <ListItem
+                    key={index}
+                    secondaryAction={
+                      <IconButton edge="end" aria-label="download">
+                        <DownloadIcon />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemAvatar>
+                      <Avatar>
+                        <DescriptionIcon />
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={doc}
+                      secondary={`Added on ${format(new Date(meeting.createdDate), 'MMM dd, yyyy')}`}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </TabPanel>
+
+          <TabPanel value={activeTab} index={3}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6">
+                Meeting Minutes
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+              {meeting.minutes && (
                 <Button
                   variant="outlined"
                   startIcon={<DownloadIcon />}
-                  fullWidth
+                  onClick={handleDownloadMinutes}
                 >
-                  Download Agenda
+                  Download
                 </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<DescriptionIcon />}
-                  fullWidth
-                >
-                  Add Document
-                </Button>
-                <Button variant="outlined" startIcon={<NotesIcon />} fullWidth>
-                  Add Notes
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+              )}
+            </Box>
+
+            {!meeting.minutes ? (
+              <Alert severity="info">
+                Minutes have not been prepared for this meeting yet.
+              </Alert>
+            ) : (
+              <Card>
+                <CardContent>
+                  <Box mb={2} sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Prepared By
+                      </Typography>
+                      <Typography variant="body1">{meeting.minutes.preparedBy}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {format(new Date(meeting.minutes.preparedDate), 'MMM dd, yyyy')}
+                      </Typography>
+                    </Box>
+                    {meeting.minutes.isApproved && meeting.minutes.approvedBy && (
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Approved By
+                        </Typography>
+                        <Typography variant="body1">{meeting.minutes.approvedBy}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {meeting.minutes.approvedDate && format(new Date(meeting.minutes.approvedDate), 'MMM dd, yyyy')}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Box>
+                    <Typography variant="body1" whiteSpace="pre-wrap">
+                      {meeting.minutes.content}
+                    </Typography>
+                  </Box>
+
+                  {meeting.minutes.attachments && meeting.minutes.attachments.length > 0 && (
+                    <>
+                      <Divider sx={{ my: 2 }} />
+                      <Typography variant="subtitle2" gutterBottom>
+                        Attachments
+                      </Typography>
+                      <List dense>
+                        {meeting.minutes.attachments.map((attachment, index) => (
+                          <ListItem key={index}>
+                            <ListItemAvatar>
+                              <Avatar sx={{ width: 32, height: 32 }}>
+                                <DescriptionIcon fontSize="small" />
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText primary={attachment} />
+                            <IconButton size="small">
+                              <DownloadIcon fontSize="small" />
+                            </IconButton>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </TabPanel>
+
+          <TabPanel value={activeTab} index={4}>
+            <Typography variant="h6" gutterBottom>
+              Attendees
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+              {meeting.attendees.map((attendee, index) => (
+                <Card variant="outlined" key={index}>
+                  <CardContent>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Avatar sx={{ width: 48, height: 48 }}>
+                        {attendee.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body1" fontWeight={500}>
+                          {attendee}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Board Member
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </TabPanel>
+        </Paper>
+      </Box>
+    </AppLayout>
   );
 };

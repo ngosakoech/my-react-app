@@ -1,212 +1,247 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Typography,
-  Button,
   Card,
   CardContent,
-  Grid,
+  CardActions,
+  Typography,
+  Button,
   Chip,
   TextField,
   MenuItem,
-  InputAdornment,
+  Fab,
+  IconButton,
+  Menu,
+  ListItemIcon,
+  ListItemText,
+  CircularProgress,
+  Alert,
+  InputAdornment
 } from '@mui/material';
 import {
   Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Visibility as ViewIcon,
+  MoreVert as MoreVertIcon,
   Search as SearchIcon,
-  Event as EventIcon,
+  CalendarToday as CalendarIcon,
+  LocationOn as LocationIcon,
+  People as PeopleIcon
 } from '@mui/icons-material';
-import { DataTable, type Column } from '../../components/common/DataTable';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { EmptyState } from '../../components/common/EmptyState';
+import { AppLayout } from '../../components/layout/AppLayout';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { mockMeetings } from '../../mocks/meetings.mock';
-import type { Meeting } from '../../types';
-import { MeetingType, MeetingStatus } from '../../types';
+import { EmptyState } from '../../components/common/EmptyState';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { useMeetingContext } from '../../contexts/MeetingContext';
+import { useAuth } from '../../contexts/AuthContext';
+import type { Meeting } from '../../types/meeting.types';
+import { MeetingType, MeetingStatus } from '../../types/meeting.types';
 import { format } from 'date-fns';
+
+const meetingTypeLabels: Record<string, string> = {
+  [MeetingType.BOARD]: 'Board Meeting',
+  [MeetingType.SUBCOMMITTEE]: 'Subcommittee',
+  [MeetingType.EMERGENCY]: 'Emergency',
+  [MeetingType.ANNUAL]: 'Annual',
+  [MeetingType.SPECIAL]: 'Special'
+};
+
+const meetingStatusLabels: Record<string, string> = {
+  [MeetingStatus.SCHEDULED]: 'Scheduled',
+  [MeetingStatus.IN_PROGRESS]: 'In Progress',
+  [MeetingStatus.COMPLETED]: 'Completed',
+  [MeetingStatus.CANCELLED]: 'Cancelled'
+};
 
 export const MeetingList = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const { user } = useAuth();
+  const { meetings, loading, error, fetchMeetings, deleteMeeting, clearError } = useMeetingContext();
+  
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('date');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage] = useState(9);
+  
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'board_member';
 
   useEffect(() => {
-    const loadMeetings = async () => {
-      setLoading(true);
+    fetchMeetings();
+  }, [fetchMeetings]);
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, meeting: Meeting) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+    setSelectedMeeting(meeting);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedMeeting(null);
+  };
+
+  const handleView = () => {
+    if (selectedMeeting) {
+      navigate(`/meetings/${selectedMeeting.id}`);
+    }
+    handleMenuClose();
+  };
+
+  const handleEdit = () => {
+    if (selectedMeeting) {
+      navigate(`/meetings/edit/${selectedMeeting.id}`);
+    }
+    handleMenuClose();
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedMeeting) {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        setMeetings(mockMeetings);
-      } finally {
-        setLoading(false);
+        await deleteMeeting(selectedMeeting.id);
+        setDeleteDialogOpen(false);
+        setSelectedMeeting(null);
+      } catch (err) {
+        console.error('Failed to delete meeting:', err);
       }
-    };
+    }
+  };
 
-    loadMeetings();
-  }, []);
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedMeeting(null);
+  };
 
-  const filteredMeetings = meetings.filter((meeting) => {
-    const matchesSearch =
-      meeting.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      meeting.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === 'all' || meeting.type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || meeting.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
-  });
+  const filteredAndSortedMeetings = useMemo(() => {
+    let filtered = meetings.filter(meeting => {
+      const matchesSearch = meeting.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           meeting.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || meeting.status === statusFilter;
+      const matchesType = typeFilter === 'all' || meeting.type === typeFilter;
+      
+      return matchesSearch && matchesStatus && matchesType;
+    });
 
-  const columns: Column<Meeting>[] = [
-    {
-      id: 'title',
-      label: 'Meeting Title',
-      minWidth: 250,
-      format: (_, row) => (
-        <Box>
-          <Typography variant="subtitle2">{row.title}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {row.location}
-          </Typography>
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'date':
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'type':
+          return a.type.localeCompare(b.type);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [meetings, searchQuery, statusFilter, typeFilter, sortBy]);
+
+  const paginatedMeetings = useMemo(() => {
+    const start = page * rowsPerPage;
+    const end = start + rowsPerPage;
+    return filteredAndSortedMeetings.slice(start, end);
+  }, [filteredAndSortedMeetings, page, rowsPerPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedMeetings.length / rowsPerPage);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case MeetingStatus.SCHEDULED:
+        return 'info';
+      case MeetingStatus.IN_PROGRESS:
+        return 'warning';
+      case MeetingStatus.COMPLETED:
+        return 'success';
+      case MeetingStatus.CANCELLED:
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  if (loading && meetings.length === 0) {
+    return (
+      <AppLayout>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
         </Box>
-      ),
-    },
-    {
-      id: 'date',
-      label: 'Date & Time',
-      minWidth: 150,
-      format: (value) => (
-        <Box>
-          <Typography variant="body2">
-            {format(new Date(value as Date), 'PPP')}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {(value as any).time || 'TBD'}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      id: 'type',
-      label: 'Type',
-      align: 'center',
-      format: (value) => (
-        <Chip
-          label={value as string}
-          size="small"
-          color={
-            value === MeetingType.BOARD
-              ? 'primary'
-              : value === MeetingType.EMERGENCY
-              ? 'error'
-              : 'default'
-          }
-        />
-      ),
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      align: 'center',
-      format: (value) => <StatusBadge status={value as MeetingStatus} />,
-    },
-    {
-      id: 'attendees',
-      label: 'Attendees',
-      align: 'center',
-      format: (value) => `${(value as string[]).length} members`,
-    },
-    {
-      id: 'agenda',
-      label: 'Agenda Items',
-      align: 'center',
-      format: (_, row) => row.agenda.length,
-    },
-  ];
-
-  const stats = [
-    {
-      label: 'Total Meetings',
-      value: meetings.length,
-      color: 'primary.main',
-    },
-    {
-      label: 'Upcoming',
-      value: meetings.filter((m) => m.status === MeetingStatus.SCHEDULED).length,
-      color: 'info.main',
-    },
-    {
-      label: 'In Progress',
-      value: meetings.filter((m) => m.status === MeetingStatus.IN_PROGRESS).length,
-      color: 'warning.main',
-    },
-    {
-      label: 'Completed',
-      value: meetings.filter((m) => m.status === MeetingStatus.COMPLETED).length,
-      color: 'success.main',
-    },
-  ];
-
-  if (loading) {
-    return <LoadingSpinner message="Loading meetings..." />;
+      </AppLayout>
+    );
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" gutterBottom>
+    <AppLayout>
+      <Box sx={{ mb: 4 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" component="h1">
             Meetings
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage and view all board meetings
-          </Typography>
+          {isAdmin && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/meetings/new')}
+            >
+              Create Meeting
+            </Button>
+          )}
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/meetings/create')}
-        >
-          Schedule Meeting
-        </Button>
-      </Box>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {stats.map((stat, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4" sx={{ color: stat.color, mb: 1 }}>
-                  {stat.value}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {stat.label}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+        {error && (
+          <Alert severity="error" onClose={clearError} sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 4 }}>
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+              <Box sx={{ gridColumn: { xs: '1', md: 'span 2' } }}>
+                <TextField
+                  fullWidth
+                  placeholder="Search meetings..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
               <TextField
                 fullWidth
-                placeholder="Search meetings..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+                select
+                label="Status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="all">All Status</MenuItem>
+                {Object.entries(meetingStatusLabels).map(([value, label]) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </TextField>
               <TextField
                 fullWidth
                 select
@@ -215,56 +250,219 @@ export const MeetingList = () => {
                 onChange={(e) => setTypeFilter(e.target.value)}
               >
                 <MenuItem value="all">All Types</MenuItem>
-                {Object.values(MeetingType).map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
+                {Object.entries(meetingTypeLabels).map(([value, label]) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            </Box>
+            <Box sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 select
-                label="Status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                label="Sort By"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
               >
-                <MenuItem value="all">All Statuses</MenuItem>
-                {Object.values(MeetingStatus).map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
+                <MenuItem value="date">Date</MenuItem>
+                <MenuItem value="title">Title</MenuItem>
+                <MenuItem value="type">Type</MenuItem>
+                <MenuItem value="status">Status</MenuItem>
               </TextField>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+            </Box>
+          </CardContent>
+        </Card>
 
-      {filteredMeetings.length === 0 ? (
-        <EmptyState
-          icon={EventIcon}
-          title="No meetings found"
-          description="Try adjusting your filters or create a new meeting"
-          action={
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/meetings/create')}
+        {paginatedMeetings.length === 0 ? (
+          <EmptyState
+            title="No meetings found"
+            description={
+              searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
+                ? "Try adjusting your filters"
+                : "Get started by creating your first meeting"
+            }
+            action={
+              isAdmin && !searchQuery && statusFilter === 'all' && typeFilter === 'all' ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => navigate('/meetings/new')}
+                >
+                  Create Meeting
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+                gap: 3,
+              }}
             >
-              Schedule Meeting
-            </Button>
-          }
-        />
-      ) : (
-        <DataTable
-          columns={columns}
-          rows={filteredMeetings}
-          rowKey="id"
-          onRowClick={(meeting) => navigate(`/meetings/${meeting.id}`)}
-        />
+              {paginatedMeetings.map((meeting) => (
+                <Card
+                  key={meeting.id}
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 4,
+                    },
+                  }}
+                  onClick={() => navigate(`/meetings/${meeting.id}`)}
+                >
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                        <Chip
+                          label={meetingTypeLabels[meeting.type]}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuClick(e, meeting)}
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+                      </Box>
+
+                      <Typography variant="h6" component="h2" gutterBottom noWrap>
+                        {meeting.title}
+                      </Typography>
+
+                      <Box display="flex" alignItems="center" gap={1} mb={1}>
+                        <CalendarIcon fontSize="small" color="action" />
+                        <Typography variant="body2" color="text.secondary">
+                          {format(new Date(meeting.date), 'MMM dd, yyyy')} at {meeting.time}
+                        </Typography>
+                      </Box>
+
+                      <Box display="flex" alignItems="center" gap={1} mb={1}>
+                        <LocationIcon fontSize="small" color="action" />
+                        <Typography variant="body2" color="text.secondary" noWrap>
+                          {meeting.location}
+                        </Typography>
+                      </Box>
+
+                      <Box display="flex" alignItems="center" gap={1} mb={2}>
+                        <PeopleIcon fontSize="small" color="action" />
+                        <Typography variant="body2" color="text.secondary">
+                          {meeting.attendees.length} attendees
+                        </Typography>
+                      </Box>
+
+                      <StatusBadge
+                        status={getStatusColor(meeting.status)}
+                        label={meetingStatusLabels[meeting.status]}
+                      />
+                    </CardContent>
+
+                    <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+                      <Button
+                        size="small"
+                        startIcon={<ViewIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/meetings/${meeting.id}`);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </CardActions>
+                  </Card>
+                ))}
+              </Box>
+
+            {totalPages > 1 && (
+              <Box display="flex" justifyContent="center" mt={4}>
+                <Box display="flex" gap={1}>
+                  <Button
+                    disabled={page === 0}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Box display="flex" alignItems="center" px={2}>
+                    <Typography>
+                      Page {page + 1} of {totalPages}
+                    </Typography>
+                  </Box>
+                  <Button
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Next
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </>
+        )}
+      </Box>
+
+      {isAdmin && (
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+          }}
+          onClick={() => navigate('/meetings/new')}
+        >
+          <AddIcon />
+        </Fab>
       )}
-    </Box>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleView}>
+          <ListItemIcon>
+            <ViewIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>View Details</ListItemText>
+        </MenuItem>
+        {isAdmin && (
+          <>
+            <MenuItem onClick={handleEdit}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Edit</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleDeleteClick}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Delete</ListItemText>
+            </MenuItem>
+          </>
+        )}
+      </Menu>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Delete Meeting"
+        message={`Are you sure you want to delete "${selectedMeeting?.title}"? This action cannot be undone.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+    </AppLayout>
   );
 };

@@ -1,268 +1,408 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,
+  Paper,
+  Button,
   List,
   ListItem,
   ListItemText,
   ListItemAvatar,
   Avatar,
   Chip,
-  Button,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
-  People as PeopleIcon,
-  Event as EventIcon,
-  Assignment as AssignmentIcon,
-  TrendingUp as TrendingUpIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
+  People,
+  Event,
+  CheckCircle,
+  Description,
+  Add,
+  Announcement,
+  ManageAccounts,
+  TrendingUp,
+  TrendingDown,
+  Circle,
 } from '@mui/icons-material';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { mockMeetings } from '../../mocks/meetings.mock';
+import { useNavigate } from 'react-router-dom';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useAuth } from '../../contexts/AuthContext';
+import { useMeetingContext } from '../../contexts/MeetingContext';
+import { useDocumentContext } from '../../contexts/DocumentContext';
+import { useVotingContext } from '../../contexts/VotingContext';
+import { AppLayout } from '../../components/layout/AppLayout';
 import { mockUsers } from '../../mocks/users.mock';
-import { mockLoans } from '../../mocks/loans.mock';
-import { MeetingStatus, LoanStatus } from '../../types';
-import { format } from 'date-fns';
+import { getUpcomingMeetings } from '../../mocks/meetings.mock';
+import { getRecentDocuments } from '../../mocks/documents.mock';
 
-interface StatCard {
-  title: string;
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+interface ActivityDataItem {
+  name: string;
   value: number;
-  icon: React.ReactNode;
-  color: string;
-  change?: string;
 }
 
 export const AdminDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<StatCard[]>([]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { meetings, loading: meetingsLoading } = useMeetingContext();
+  const { documents, loading: documentsLoading } = useDocumentContext();
+  const { resolutions } = useVotingContext();
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const activeUsers = mockUsers.filter(u => u.isActive).length;
-        const upcomingMeetings = mockMeetings.filter(
-          m => m.status === MeetingStatus.SCHEDULED
-        ).length;
-        const pendingLoans = mockLoans.filter(
-          l => l.status === LoanStatus.UNDER_REVIEW
-        ).length;
-        const totalRevenue = mockLoans
-          .filter(l => l.status === LoanStatus.APPROVED)
-          .reduce((sum, loan) => sum + loan.amount, 0);
+  const [systemHealth] = useState({
+    server: 'operational',
+    database: 'operational',
+    storage: 'warning',
+    backup: 'operational',
+  });
 
-        setStats([
-          {
-            title: 'Active Users',
-            value: activeUsers,
-            icon: <PeopleIcon />,
-            color: '#1976d2',
-            change: '+5.2%',
-          },
-          {
-            title: 'Upcoming Meetings',
-            value: upcomingMeetings,
-            icon: <EventIcon />,
-            color: '#9c27b0',
-            change: '+2',
-          },
-          {
-            title: 'Pending Loans',
-            value: pendingLoans,
-            icon: <AssignmentIcon />,
-            color: '#ed6c02',
-            change: '-3',
-          },
-          {
-            title: 'Approved Loans',
-            value: Math.round(totalRevenue / 1000000),
-            icon: <TrendingUpIcon />,
-            color: '#2e7d32',
-            change: '+12.5%',
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const upcomingMeetings = getUpcomingMeetings().slice(0, 5);
+  const recentDocs = getRecentDocuments(5);
+  const activeUsers = mockUsers.filter(u => u.isActive);
+  const pendingApprovals = resolutions.filter(r => r.status === 'active').length;
 
-    loadData();
-  }, []);
+  const userEngagementData = [
+    { month: 'Jan', logins: 120, documents: 45, votes: 32 },
+    { month: 'Feb', logins: 135, documents: 52, votes: 38 },
+    { month: 'Mar', logins: 148, documents: 61, votes: 42 },
+    { month: 'Apr', logins: 152, documents: 58, votes: 45 },
+    { month: 'May', logins: 165, documents: 67, votes: 48 },
+    { month: 'Jun', logins: 178, documents: 72, votes: 51 },
+  ];
 
-  if (loading) {
-    return <LoadingSpinner message="Loading dashboard..." />;
+  const activityData: ActivityDataItem[] = [
+    { name: 'Meetings', value: meetings.length },
+    { name: 'Documents', value: documents.length },
+    { name: 'Users', value: activeUsers.length },
+    { name: 'Resolutions', value: resolutions.length },
+  ];
+
+  const recentActivity = [
+    { id: 1, user: 'Sarah Wanjiru', action: 'Created Q1 2024 Board Meeting', time: '2 hours ago', avatar: 'https://i.pravatar.cc/150?img=5' },
+    { id: 2, user: 'Grace Muthoni', action: 'Uploaded Budget 2024 document', time: '3 hours ago', avatar: 'https://i.pravatar.cc/150?img=47' },
+    { id: 3, user: 'James Njoroge', action: 'Approved minutes from Q4 2023', time: '5 hours ago', avatar: 'https://i.pravatar.cc/150?img=51' },
+    { id: 4, user: 'Peter Omondi', action: 'Updated meeting agenda', time: '6 hours ago', avatar: 'https://i.pravatar.cc/150?img=33' },
+    { id: 5, user: 'Mary Akinyi', action: 'Cast vote on Resolution RES-2024-003', time: '8 hours ago', avatar: 'https://i.pravatar.cc/150?img=20' },
+  ];
+
+  const getHealthColor = (status: string) => {
+    switch (status) {
+      case 'operational':
+        return 'success';
+      case 'warning':
+        return 'warning';
+      case 'error':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const getHealthIcon = (status: string) => {
+    switch (status) {
+      case 'operational':
+        return <TrendingUp color="success" />;
+      case 'warning':
+        return <TrendingDown color="warning" />;
+      default:
+        return <Circle color="error" />;
+    }
+  };
+
+  if (meetingsLoading || documentsLoading) {
+    return (
+      <AppLayout userRole={user?.role}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
+        </Box>
+      </AppLayout>
+    );
   }
 
-  const recentMeetings = mockMeetings.slice(0, 5);
-  const pendingActions = mockLoans
-    .filter(l => l.status === LoanStatus.UNDER_REVIEW)
-    .slice(0, 5);
-
   return (
-    <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
+    <AppLayout userRole={user?.role}>
+      <Box>
+        <Typography variant="h4" gutterBottom fontWeight="bold">
           Admin Dashboard
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Overview of system activities and metrics
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          Welcome back, {user?.firstName}! Here's your system overview.
         </Typography>
-      </Box>
 
-      <Grid container spacing={3}>
-        {stats.map((stat, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Box>
-                    <Typography color="text.secondary" variant="body2" gutterBottom>
-                      {stat.title}
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold">
-                      {stat.value}
-                    </Typography>
-                  </Box>
-                  <Avatar
-                    sx={{
-                      bgcolor: stat.color,
-                      width: 56,
-                      height: 56,
-                    }}
-                  >
-                    {stat.icon}
-                  </Avatar>
-                </Box>
-                {stat.change && (
-                  <Typography
-                    variant="caption"
-                    color={stat.change.startsWith('+') ? 'success.main' : 'error.main'}
-                  >
-                    {stat.change} from last month
+        {/* Overview Metrics */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+            gap: 3,
+            mb: 4,
+          }}
+        >
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    Total Users
                   </Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+                  <Typography variant="h4" fontWeight="bold">
+                    {activeUsers.length}
+                  </Typography>
+                  <Typography variant="caption" color="success.main">
+                    +3 this month
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
+                  <People fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
 
-        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Meetings
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    Active Meetings
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    {upcomingMeetings.length}
+                  </Typography>
+                  <Typography variant="caption" color="info.main">
+                    {meetings.length} total
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'info.main', width: 56, height: 56 }}>
+                  <Event fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    Pending Approvals
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    {pendingApprovals}
+                  </Typography>
+                  <Typography variant="caption" color="warning.main">
+                    Requires action
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'warning.main', width: 56, height: 56 }}>
+                  <CheckCircle fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    Document Count
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    {documents.length}
+                  </Typography>
+                  <Typography variant="caption" color="success.main">
+                    {recentDocs.length} recent
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'success.main', width: 56, height: 56 }}>
+                  <Description fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Quick Actions */}
+        <Paper sx={{ p: 3, mb: 4 }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold">
+            Quick Actions
+          </Typography>
+          <Box display="flex" gap={2} flexWrap="wrap">
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => navigate('/meetings/create')}
+            >
+              Create Meeting
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<Announcement />}
+              onClick={() => navigate('/announcements/new')}
+            >
+              Send Announcement
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<ManageAccounts />}
+              onClick={() => navigate('/users')}
+            >
+              Manage Users
+            </Button>
+          </Box>
+        </Paper>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(12, 1fr)' }, gap: 3 }}>
+          {/* User Engagement Chart */}
+          <Box sx={{ gridColumn: { xs: 'span 1', lg: 'span 8' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                User Engagement Metrics
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={userEngagementData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="logins" stroke="#8884d8" strokeWidth={2} name="Logins" />
+                  <Line type="monotone" dataKey="documents" stroke="#82ca9d" strokeWidth={2} name="Documents" />
+                  <Line type="monotone" dataKey="votes" stroke="#ffc658" strokeWidth={2} name="Votes" />
+                </LineChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Box>
+
+          {/* Activity Distribution */}
+          <Box sx={{ gridColumn: { xs: 'span 1', lg: 'span 4' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Activity Distribution
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={activityData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(props: any) => {
+                      const entry = props as ActivityDataItem;
+                      return entry.name;
+                    }}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {activityData.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Box>
+
+          {/* System Health Indicators */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                System Health
               </Typography>
               <List>
-                {recentMeetings.map((meeting) => (
-                  <ListItem key={meeting.id} divider>
+                {Object.entries(systemHealth).map(([key, status]) => (
+                  <ListItem key={key}>
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        <EventIcon />
+                      <Avatar sx={{ bgcolor: 'background.paper' }}>
+                        {getHealthIcon(status)}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={meeting.title}
-                      secondary={format(new Date(meeting.date), 'PPP')}
+                      primary={key.charAt(0).toUpperCase() + key.slice(1)}
+                      secondary={status}
                     />
                     <Chip
-                      label={meeting.status}
+                      label={status}
+                      color={getHealthColor(status)}
                       size="small"
-                      color={
-                        meeting.status === MeetingStatus.COMPLETED
-                          ? 'success'
-                          : meeting.status === MeetingStatus.SCHEDULED
-                          ? 'primary'
-                          : 'default'
-                      }
                     />
                   </ListItem>
                 ))}
               </List>
-              <Button fullWidth variant="outlined" sx={{ mt: 2 }}>
-                View All Meetings
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Paper>
+          </Box>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Pending Actions
-              </Typography>
-              <List>
-                {pendingActions.map((loan) => (
-                  <ListItem key={loan.id} divider>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'warning.main' }}>
-                        <WarningIcon />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={`${loan.applicantName} - ${loan.loanType}`}
-                      secondary={`KSH ${loan.amount.toLocaleString()}`}
-                    />
-                    <Chip
-                      label={loan.urgency}
-                      size="small"
-                      color={
-                        loan.urgency === 'critical'
-                          ? 'error'
-                          : loan.urgency === 'high'
-                          ? 'warning'
-                          : 'default'
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-              <Button fullWidth variant="outlined" sx={{ mt: 2 }}>
-                View All Pending
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          {/* Recent Activity Timeline */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
                 Recent Activity
               </Typography>
               <List>
-                {mockUsers.slice(0, 5).map((user) => (
-                  <ListItem key={user.id} divider>
+                {recentActivity.map((activity) => (
+                  <ListItem key={activity.id} divider>
                     <ListItemAvatar>
-                      <Avatar src={user.avatar}>
-                        {user.firstName[0]}
-                        {user.lastName[0]}
-                      </Avatar>
+                      <Avatar src={activity.avatar} alt={activity.user} />
                     </ListItemAvatar>
                     <ListItemText
-                      primary={`${user.firstName} ${user.lastName}`}
-                      secondary={`${user.role} - Last login: ${
-                        user.lastLogin
-                          ? format(new Date(user.lastLogin), 'PPpp')
-                          : 'Never'
-                      }`}
+                      primary={activity.action}
+                      secondary={`${activity.user} • ${activity.time}`}
                     />
-                    {user.isActive ? (
-                      <CheckCircleIcon color="success" />
-                    ) : (
-                      <WarningIcon color="disabled" />
-                    )}
                   </ListItem>
                 ))}
               </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+            </Paper>
+          </Box>
+
+          {/* Upcoming Meetings */}
+          <Box sx={{ gridColumn: 'span 1' }}>
+            <Paper sx={{ p: 3 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                  Upcoming Meetings
+                </Typography>
+                <Button size="small" onClick={() => navigate('/meetings')}>
+                  View All
+                </Button>
+              </Box>
+              {upcomingMeetings.length === 0 ? (
+                <Alert severity="info">No upcoming meetings scheduled</Alert>
+              ) : (
+                <List>
+                  {upcomingMeetings.map((meeting) => (
+                    <ListItem
+                      key={meeting.id}
+                      divider
+                      sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                      onClick={() => navigate(`/meetings/${meeting.id}`)}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: 'primary.main' }}>
+                          <Event />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={meeting.title}
+                        secondary={`${meeting.date.toLocaleDateString()} at ${meeting.time} • ${meeting.location}`}
+                      />
+                      <Chip label={meeting.type} size="small" color="primary" variant="outlined" />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Paper>
+          </Box>
+        </Box>
+      </Box>
+    </AppLayout>
   );
 };
+
+export default AdminDashboard;

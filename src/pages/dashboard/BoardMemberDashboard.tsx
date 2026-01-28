@@ -1,309 +1,560 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
-  Grid,
-  Card,
-  CardContent,
   Typography,
+  Paper,
+  Button,
   List,
   ListItem,
   ListItemText,
   ListItemAvatar,
   Avatar,
   Chip,
-  Button,
+  CircularProgress,
+  Alert,
+  Badge,
+  IconButton,
+  Divider,
 } from '@mui/material';
 import {
-  Event as EventIcon,
-  Assignment as AssignmentIcon,
-  Description as DescriptionIcon,
-  HowToVote as VoteIcon,
-  TrendingUp as TrendingUpIcon,
-  AccessTime as AccessTimeIcon,
+  CalendarMonth,
+  Assignment,
+  Description,
+  VideoCall,
+  ArrowForward,
+  CheckCircle,
+  PendingActions,
+  TrendingUp,
 } from '@mui/icons-material';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useNavigate } from 'react-router-dom';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
-import { mockMeetings } from '../../mocks/meetings.mock';
-import { mockDocuments } from '../../mocks/documents.mock';
-import { mockResolutions } from '../../mocks/resolutions.mock';
-import { MeetingStatus, ResolutionStatus } from '../../types';
-import { format, isAfter, addDays } from 'date-fns';
+import { useMeetingContext } from '../../contexts/MeetingContext';
+import { useDocumentContext } from '../../contexts/DocumentContext';
+import { useVotingContext } from '../../contexts/VotingContext';
+import { AppLayout } from '../../components/layout/AppLayout';
+import { getUpcomingMeetings } from '../../mocks/meetings.mock';
+import { getRecentDocuments } from '../../mocks/documents.mock';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+interface LoanPortfolioItem {
+  category: string;
+  value: number;
+  amount: number;
+}
 
 export const BoardMemberDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const { meetings, loading: meetingsLoading } = useMeetingContext();
+  const { documents, loading: documentsLoading } = useDocumentContext();
+  const { resolutions } = useVotingContext();
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+  const upcomingMeetings = getUpcomingMeetings().slice(0, 4);
+  const recentDocs = getRecentDocuments(4);
 
-  if (loading) {
-    return <LoadingSpinner message="Loading dashboard..." />;
-  }
-
-  const upcomingMeetings = mockMeetings
-    .filter(
-      (m) =>
-        m.status === MeetingStatus.SCHEDULED &&
-        isAfter(new Date(m.date), new Date())
-    )
-    .slice(0, 3);
-
-  const recentDocuments = mockDocuments.slice(0, 5);
-
-  const activeVoting = mockResolutions
-    .filter(
-      (r) =>
-        r.status === ResolutionStatus.ACTIVE &&
-        isAfter(new Date(r.votingDeadline), new Date())
-    )
-    .slice(0, 3);
+  const [selectedDate] = useState(new Date());
 
   const pendingTasks = [
-    {
-      id: 1,
-      title: 'Review Q4 Financial Report',
-      deadline: addDays(new Date(), 2),
-      priority: 'high',
-    },
-    {
-      id: 2,
-      title: 'Approve Meeting Minutes',
-      deadline: addDays(new Date(), 5),
-      priority: 'medium',
-    },
-    {
-      id: 3,
-      title: 'Submit Committee Recommendations',
-      deadline: addDays(new Date(), 7),
-      priority: 'low',
-    },
+    { id: 1, title: 'Vote on Resolution RES-2024-003', type: 'vote', priority: 'high', dueDate: new Date('2024-02-28') },
+    { id: 2, title: 'Review Budget 2024 Document', type: 'review', priority: 'medium', dueDate: new Date('2024-02-25') },
+    { id: 3, title: 'Approve Q4 2023 Minutes', type: 'approval', priority: 'high', dueDate: new Date('2024-02-20') },
+    { id: 4, title: 'Submit Strategic Plan Feedback', type: 'feedback', priority: 'low', dueDate: new Date('2024-03-05') },
   ];
 
-  const metrics = [
-    {
-      label: 'Meetings Attended',
-      value: '12/14',
-      icon: <EventIcon />,
-      color: '#1976d2',
-    },
-    {
-      label: 'Documents Reviewed',
-      value: '45',
-      icon: <DescriptionIcon />,
-      color: '#9c27b0',
-    },
-    {
-      label: 'Resolutions Voted',
-      value: '18/20',
-      icon: <VoteIcon />,
-      color: '#2e7d32',
-    },
-    {
-      label: 'Participation Rate',
-      value: '95%',
-      icon: <TrendingUpIcon />,
-      color: '#ed6c02',
-    },
+  const actionItems = [
+    { id: 1, title: 'Review loan application LN-2024-005', assignedBy: 'Elizabeth Wangari', dueDate: '2024-02-22' },
+    { id: 2, title: 'Prepare Q1 financial analysis', assignedBy: 'Grace Muthoni', dueDate: '2024-02-25' },
+    { id: 3, title: 'Update governance policy document', assignedBy: 'Peter Omondi', dueDate: '2024-02-28' },
   ];
+
+  const organizationalMetrics = [
+    { month: 'Aug', revenue: 4200, expenses: 3800, growth: 10.5 },
+    { month: 'Sep', revenue: 4500, expenses: 3900, growth: 12.3 },
+    { month: 'Oct', revenue: 4800, expenses: 4100, growth: 14.1 },
+    { month: 'Nov', revenue: 5100, expenses: 4200, growth: 15.8 },
+    { month: 'Dec', revenue: 5400, expenses: 4400, growth: 17.2 },
+    { month: 'Jan', revenue: 5700, expenses: 4500, growth: 19.5 },
+  ];
+
+  const membershipData = [
+    { month: 'Aug', active: 450, new: 25, inactive: 10 },
+    { month: 'Sep', active: 465, new: 30, inactive: 15 },
+    { month: 'Oct', active: 480, new: 28, inactive: 13 },
+    { month: 'Nov', active: 495, new: 32, inactive: 17 },
+    { month: 'Dec', active: 510, new: 35, inactive: 20 },
+    { month: 'Jan', active: 525, new: 40, inactive: 25 },
+  ];
+
+  const performanceData = [
+    { name: 'Attendance', value: 95, color: '#0088FE' },
+    { name: 'Task Completion', value: 88, color: '#00C49F' },
+    { name: 'Vote Participation', value: 92, color: '#FFBB28' },
+    { name: 'Document Reviews', value: 85, color: '#FF8042' },
+  ];
+
+  const loanPortfolioData: LoanPortfolioItem[] = [
+    { category: 'Business', value: 35, amount: 45000000 },
+    { category: 'Personal', value: 28, amount: 28000000 },
+    { category: 'Agriculture', value: 20, amount: 25000000 },
+    { category: 'Education', value: 12, amount: 12000000 },
+    { category: 'Emergency', value: 5, amount: 5000000 },
+  ];
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'error';
+      case 'medium':
+        return 'warning';
+      case 'low':
+        return 'info';
+      default:
+        return 'default';
+    }
+  };
+
+  const getTaskIcon = (type: string) => {
+    switch (type) {
+      case 'vote':
+        return <CheckCircle />;
+      case 'review':
+        return <Description />;
+      case 'approval':
+        return <PendingActions />;
+      default:
+        return <Assignment />;
+    }
+  };
+
+  if (meetingsLoading || documentsLoading) {
+    return (
+      <AppLayout userRole={user?.role}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
+        </Box>
+      </AppLayout>
+    );
+  }
 
   return (
-    <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Welcome back, {user?.firstName}!
+    <AppLayout userRole={user?.role}>
+      <Box>
+        <Typography variant="h4" gutterBottom fontWeight="bold">
+          Board Member Dashboard
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Here's what's happening with your board activities
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          Welcome back, {user?.firstName}! Here's your personalized board overview.
         </Typography>
-      </Box>
 
-      <Grid container spacing={3}>
-        {metrics.map((metric, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: metric.color, width: 48, height: 48 }}>
-                    {metric.icon}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {metric.label}
-                    </Typography>
-                    <Typography variant="h5" fontWeight="bold">
-                      {metric.value}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Upcoming Meetings
-              </Typography>
-              {upcomingMeetings.length > 0 ? (
-                <List>
-                  {upcomingMeetings.map((meeting) => (
-                    <ListItem key={meeting.id} divider>
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: 'primary.main' }}>
-                          <EventIcon />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={meeting.title}
-                        secondary={
-                          <>
-                            {format(new Date(meeting.date), 'PPP')} at {meeting.time}
-                            <br />
-                            {meeting.location}
-                          </>
-                        }
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Typography color="text.secondary" sx={{ py: 2 }}>
-                  No upcoming meetings
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gap: 3 }}>
+          {/* Calendar Widget */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 4' } }}>
+            <Paper sx={{ p: 3, height: '100%' }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                  Calendar
                 </Typography>
-              )}
-              <Button fullWidth variant="outlined" sx={{ mt: 2 }}>
-                View Calendar
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Pending Tasks
+                <IconButton size="small" onClick={() => navigate('/meetings')}>
+                  <CalendarMonth />
+                </IconButton>
+              </Box>
+              <Box textAlign="center" mb={3}>
+                <Typography variant="h3" fontWeight="bold" color="primary">
+                  {selectedDate.getDate()}
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </Typography>
+              </Box>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Upcoming This Month
               </Typography>
-              <List>
-                {pendingTasks.map((task) => (
-                  <ListItem key={task.id} divider>
-                    <ListItemAvatar>
-                      <Avatar
-                        sx={{
-                          bgcolor:
-                            task.priority === 'high'
-                              ? 'error.main'
-                              : task.priority === 'medium'
-                              ? 'warning.main'
-                              : 'info.main',
-                        }}
-                      >
-                        <AssignmentIcon />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={task.title}
-                      secondary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                          <AccessTimeIcon fontSize="small" />
-                          Due: {format(task.deadline, 'PPP')}
+              <List dense>
+                {upcomingMeetings.slice(0, 3).map((meeting) => (
+                  <ListItem key={meeting.id} disablePadding sx={{ py: 0.5 }}>
+                    <Typography variant="body2" noWrap>
+                      • {meeting.title}
+                    </Typography>
+                  </ListItem>
+                ))}
+              </List>
+              <Button
+                fullWidth
+                variant="outlined"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={() => navigate('/meetings')}
+              >
+                View Full Calendar
+              </Button>
+            </Paper>
+          </Box>
+
+          {/* Pending Tasks Widget */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 8' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                  Pending Tasks
+                </Typography>
+                <Badge badgeContent={pendingTasks.length} color="error">
+                  <PendingActions />
+                </Badge>
+              </Box>
+              {pendingTasks.length === 0 ? (
+                <Alert severity="success">All tasks completed! Great job!</Alert>
+              ) : (
+                <List>
+                  {pendingTasks.map((task) => (
+                    <ListItem
+                      key={task.id}
+                      divider
+                      secondaryAction={
+                        <Box display="flex" gap={1} alignItems="center">
+                          <Chip
+                            label={task.priority}
+                            size="small"
+                            color={getPriorityColor(task.priority)}
+                          />
+                          <IconButton edge="end" size="small">
+                            <ArrowForward />
+                          </IconButton>
                         </Box>
                       }
-                    />
-                    <Chip
-                      label={task.priority}
-                      size="small"
-                      color={
-                        task.priority === 'high'
-                          ? 'error'
-                          : task.priority === 'medium'
-                          ? 'warning'
-                          : 'info'
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Active Voting
-              </Typography>
-              {activeVoting.length > 0 ? (
-                <List>
-                  {activeVoting.map((resolution) => (
-                    <ListItem key={resolution.id} divider>
+                    >
                       <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: 'success.main' }}>
-                          <VoteIcon />
+                        <Avatar sx={{ bgcolor: 'primary.main' }}>
+                          {getTaskIcon(task.type)}
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
-                        primary={resolution.title}
-                        secondary={`Deadline: ${format(
-                          new Date(resolution.votingDeadline),
-                          'PPpp'
-                        )}`}
+                        primary={task.title}
+                        secondary={`Due: ${task.dueDate.toLocaleDateString()}`}
                       />
-                      <Button variant="contained" size="small">
-                        Vote
-                      </Button>
                     </ListItem>
                   ))}
                 </List>
-              ) : (
-                <Typography color="text.secondary" sx={{ py: 2 }}>
-                  No active voting resolutions
-                </Typography>
               )}
-              <Button fullWidth variant="outlined" sx={{ mt: 2 }}>
-                View All Resolutions
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Paper>
+          </Box>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Documents
+          {/* Financial Performance Chart */}
+          <Box sx={{ gridColumn: { xs: 'span 1', lg: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Financial Performance
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={organizationalMetrics}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="revenue" fill="#0088FE" name="Revenue (000s)" />
+                  <Bar dataKey="expenses" fill="#FF8042" name="Expenses (000s)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Box>
+
+          {/* Growth Trend Chart */}
+          <Box sx={{ gridColumn: { xs: 'span 1', lg: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Growth Trend
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={organizationalMetrics}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="growth"
+                    stroke="#00C49F"
+                    fill="#00C49F"
+                    fillOpacity={0.6}
+                    name="Growth %"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Box>
+
+          {/* Membership Trends */}
+          <Box sx={{ gridColumn: { xs: 'span 1', lg: 'span 8' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Membership Trends
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={membershipData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="active" stroke="#0088FE" strokeWidth={2} name="Active Members" />
+                  <Line type="monotone" dataKey="new" stroke="#00C49F" strokeWidth={2} name="New Members" />
+                  <Line type="monotone" dataKey="inactive" stroke="#FF8042" strokeWidth={2} name="Inactive" />
+                </LineChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Box>
+
+          {/* Loan Portfolio Distribution */}
+          <Box sx={{ gridColumn: { xs: 'span 1', lg: 'span 4' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Loan Portfolio
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={loanPortfolioData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(props: any) => {
+                      const entry = props as LoanPortfolioItem;
+                      return `${entry.category} ${entry.value}%`;
+                    }}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {loanPortfolioData.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Box>
+
+          {/* Recent Documents */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                  Recent Documents
+                </Typography>
+                <Button size="small" onClick={() => navigate('/documents')}>
+                  View All
+                </Button>
+              </Box>
+              {recentDocs.length === 0 ? (
+                <Alert severity="info">No recent documents</Alert>
+              ) : (
+                <List>
+                  {recentDocs.map((doc) => (
+                    <ListItem
+                      key={doc.id}
+                      divider
+                      sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                      onClick={() => navigate(`/documents/${doc.id}`)}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                          <Description />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={doc.title}
+                        secondary={doc.uploadedDate.toLocaleDateString()}
+                      />
+                      {doc.isConfidential && (
+                        <Chip label="Confidential" size="small" color="error" variant="outlined" />
+                      )}
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Paper>
+          </Box>
+
+          {/* Upcoming Meetings with Quick Join */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                  Upcoming Meetings
+                </Typography>
+                <Button size="small" onClick={() => navigate('/meetings')}>
+                  View All
+                </Button>
+              </Box>
+              {upcomingMeetings.length === 0 ? (
+                <Alert severity="info">No upcoming meetings</Alert>
+              ) : (
+                <List>
+                  {upcomingMeetings.map((meeting) => (
+                    <ListItem
+                      key={meeting.id}
+                      divider
+                      secondaryAction={
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<VideoCall />}
+                          onClick={() => navigate(`/meetings/${meeting.id}/join`)}
+                        >
+                          Join
+                        </Button>
+                      }
+                    >
+                      <ListItemText
+                        primary={meeting.title}
+                        secondary={`${meeting.date.toLocaleDateString()} at ${meeting.time}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Paper>
+          </Box>
+
+          {/* Action Items Assigned */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Action Items Assigned to You
               </Typography>
               <List>
-                {recentDocuments.map((doc) => (
-                  <ListItem key={doc.id} divider>
+                {actionItems.map((item) => (
+                  <ListItem key={item.id} divider>
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'info.main' }}>
-                        <DescriptionIcon />
+                      <Avatar sx={{ bgcolor: 'warning.main' }}>
+                        <Assignment />
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={doc.title}
-                      secondary={`${doc.category} • ${format(
-                        new Date(doc.uploadedDate),
-                        'PP'
-                      )}`}
+                      primary={item.title}
+                      secondary={`Assigned by ${item.assignedBy} • Due: ${item.dueDate}`}
                     />
-                    <Button size="small">View</Button>
                   </ListItem>
                 ))}
               </List>
-              <Button fullWidth variant="outlined" sx={{ mt: 2 }}>
-                Browse Library
+            </Paper>
+          </Box>
+
+          {/* Personal Performance Metrics */}
+          <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 6' } }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Your Performance Metrics
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                {performanceData.map((metric) => (
+                  <Box key={metric.name} sx={{ mb: 2 }}>
+                    <Box display="flex" justifyContent="space-between" mb={0.5}>
+                      <Typography variant="body2">{metric.name}</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {metric.value}%
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: 8,
+                        bgcolor: 'grey.200',
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: `${metric.value}%`,
+                          height: '100%',
+                          bgcolor: metric.color,
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<TrendingUp />}
+                sx={{ mt: 2 }}
+                onClick={() => navigate('/analytics')}
+              >
+                View Detailed Analytics
               </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+            </Paper>
+          </Box>
+
+          {/* Activity Summary */}
+          <Box sx={{ gridColumn: 'span 1' }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Activity Summary
+              </Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
+                <Box textAlign="center" p={2}>
+                  <Typography variant="h4" fontWeight="bold" color="primary">
+                    {meetings.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Meetings Attended
+                  </Typography>
+                </Box>
+                <Box textAlign="center" p={2}>
+                  <Typography variant="h4" fontWeight="bold" color="success.main">
+                    {resolutions.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Votes Cast
+                  </Typography>
+                </Box>
+                <Box textAlign="center" p={2}>
+                  <Typography variant="h4" fontWeight="bold" color="info.main">
+                    {documents.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Documents Reviewed
+                  </Typography>
+                </Box>
+                <Box textAlign="center" p={2}>
+                  <Typography variant="h4" fontWeight="bold" color="warning.main">
+                    {pendingTasks.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Pending Tasks
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
+        </Box>
+      </Box>
+    </AppLayout>
   );
 };
+
+export default BoardMemberDashboard;

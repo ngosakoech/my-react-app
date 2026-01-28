@@ -62,7 +62,29 @@ const DashboardRouter: React.FC = () => {
   }
 };
 
-// Error pages
+// Pages
+import { Login } from '../pages/auth/Login';
+import { Dashboard } from '../pages/dashboard';
+import { MeetingList, MeetingDetails, MeetingForm } from '../pages/meetings';
+
+// Placeholder pages
+const DocumentListPage = () => <PlaceholderPage title="Documents" />;
+const DocumentDetailPage = () => <PlaceholderPage title="Document Details" />;
+const DocumentUploadPage = () => <PlaceholderPage title="Upload Document" />;
+const VotingListPage = () => <PlaceholderPage title="Resolutions & Voting" />;
+const VotingDetailPage = () => <PlaceholderPage title="Resolution Details" />;
+const VotingCreatePage = () => <PlaceholderPage title="Create Resolution" />;
+const LoanListPage = () => <PlaceholderPage title="Loan Applications" />;
+const LoanDetailPage = () => <PlaceholderPage title="Loan Details" />;
+const LoanCreatePage = () => <PlaceholderPage title="Apply for Loan" />;
+const LoanReviewPage = () => <PlaceholderPage title="Review Loan" />;
+const UserListPage = () => <PlaceholderPage title="Users" />;
+const UserDetailPage = () => <PlaceholderPage title="User Details" />;
+const UserCreatePage = () => <PlaceholderPage title="Create User" />;
+const UserEditPage = () => <PlaceholderPage title="Edit User" />;
+const ProfilePage = () => <PlaceholderPage title="My Profile" />;
+const ProfileEditPage = () => <PlaceholderPage title="Edit Profile" />;
+const SettingsPage = () => <PlaceholderPage title="Settings" />;
 const UnauthorizedPage = () => (
   <Container maxWidth="lg" sx={{ mt: 8, textAlign: 'center' }}>
     <Typography variant="h3" gutterBottom color="error">
@@ -102,7 +124,7 @@ export const AppRoutes: React.FC = () => {
           path={ROUTES.DASHBOARD}
           element={
             <ProtectedRoute>
-              <DashboardRouter />
+              <Dashboard />
             </ProtectedRoute>
           }
         />
@@ -133,10 +155,18 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
+          path={ROUTES.MEETINGS_CREATE}
+          element={
+            <ProtectedRoute requirePermission="meetings:create">
+              <MeetingForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/meetings/:id/prepare"
           element={
-            <ProtectedRoute requirePermission="meetings:view">
-              <MeetingPreparation />
+            <ProtectedRoute requirePermission="meetings:edit">
+              <MeetingForm />
             </ProtectedRoute>
           }
         />
